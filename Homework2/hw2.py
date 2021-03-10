@@ -13,6 +13,8 @@
 * https://github.com/hualili/opencv/blob/master/deep-learning-2020S/3-pvideoCAM2019-1-30.py
 * https://docs.opencv.org/3.0-beta/doc/py_tutorials/py_gui/py_video_display/py_video_display.html
 * https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_gui/py_video_display/py_video_display.html
+* Save image frames
+* https://stackoverflow.com/questions/33311153/python-extracting-and-saving-video-frames
 * Edge detection
 * https://github.com/hualili/opencv/blob/master/deep-learning-2020S/5-Canny.py
 * Draw Canny edge image back onto original image
@@ -36,7 +38,7 @@
 from tensorflow.keras.models import load_model
 import cv2
 
-# previous video capture directly using frames from live video
+# previous video capture function directly using frames from live video
 '''
 # video capture
 import numpy as np
@@ -229,21 +231,53 @@ def find_contours(edges):
         cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     return contours
     
+# Get bounding box from contour, then get 
+# Region Of Interest (ROI) image from bounding box. 
+# Save the ROI image.
 # image: Original image frame
-# contours: countours found from Canny edge image  
-# return: Original image with all countours drawn on it
-def find_all_contours(image, contours): 
-    return cv2.drawContours(image, contours, -1, (0, 255, 0), 3) 
-
-# image: Original image frame
-# contours: countours found from Canny edge image    
-def find_biggest_contour(image, contours):
+# contours: countours found from Canny edge image 
+# returns: Copy of original image with bounding box
+def save_roi_image(image, contours):
     # find the biggest countour (c) by the area
     c = max(contours, key = cv2.contourArea)
     x,y,w,h = cv2.boundingRect(c)
-    # draw the biggest contour (c) in green
-    image = cv2.rectangle(image,(x,y),(x+w,y+h),(0,255,0),2)
-    return image
+    
+    copy = image.copy()
+    ROI_number = 0
+    ROI = image[y:y+h, x:x+w]
+    # Save ROI image
+    cv2.imwrite('ROI_{}.png'.format(ROI_number), ROI)
+    
+    # resize image
+    imageResized = cv2.resize(ROI, (28, 28))  
+    cv2.imwrite('resized_ROI_{}.png'.format(ROI_number), imageResized)
+    # load the image
+    imgToArr = load_image('resized_ROI_{}.png'.format(ROI_number))  
+    # predict the digit
+    y_pred = model.predict_classes(imgToArr)
+    digit = y_pred[0]
+    print(digit)
+    
+    copy = cv2.rectangle(copy,(x,y),(x+w,y+h),(36,255,12),2)
+    # label rectangle with predicted digit caption text
+    cv2.putText(copy, str(digit), (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 2.5, (36,255,12), 2)
+    return copy
+    
+# image: Original image frame
+# contours: countours found from Canny edge image  
+# return: Original image with all countours drawn on it
+# def get_image_with_all_contours(image, contours): 
+    # return cv2.drawContours(image, contours, -1, (0, 255, 0), 3) 
+
+# # image: Original image frame
+# # contours: countours found from Canny edge image    
+# def get_image_with_biggest_contour(image, contours):
+    # # find the biggest countour (c) by the area
+    # c = max(contours, key = cv2.contourArea)
+    # x,y,w,h = cv2.boundingRect(c)
+    # # draw the biggest contour (c) in green
+    # image = cv2.rectangle(image,(x,y),(x+w,y+h),(0,255,0),2)
+    # return image
 
 # Get canny edge from one image frame
 IMAGE_FRAME_NAME = "frame10.jpg"
@@ -257,10 +291,12 @@ img_with_canny_edges = get_orig_image_with_canny_edges(img, canny_img)
 cv2.imshow("orig with edges", img_with_canny_edges)
 # Find and draw contours using Canny edges image
 contours = find_contours(canny_img)
-# img_with_all_contours = find_all_contours(img, contours)
+# img_with_all_contours = get_image_with_all_contours(img, contours)
 # cv2.imshow("orig with all contours", img_with_all_contours)
-img_biggest_contour = find_biggest_contour(img, contours)
-cv2.imshow("orig with biggest contour", img_biggest_contour)
+# img_biggest_contour = get_image_with_biggest_contour(img, contours)
+# cv2.imshow("orig with biggest contour", img_biggest_contour)
+img_with_roi_bounding_box = save_roi_image(img, contours)
+cv2.imshow("orig with ROI box", img_with_roi_bounding_box)
 # Press any key to close windows
 # waits indefinitely for a key stroke
 k = cv2.waitKey(0) & 0xFF
