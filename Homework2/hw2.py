@@ -215,12 +215,6 @@ def get_orig_image_with_canny_edges(img, canny):
     # since our input image has 3 axis while the canny output image has only one 2 axis
     out = np.bitwise_or(img, canny[:,:,np.newaxis])
     return out
-
-# Show the given image in a window with the given window name.
-# window_name: Name of window image displayed in
-# image: Image to show
-# def show_image(window_name, image):
-    # cv2.imshow(window_name, image)
     
 # edges: Canny edges image
 # returns: Contours found
@@ -240,10 +234,8 @@ def find_contours(edges):
 # image: The image
 def save_resized_image(image):
     height, width, channels = image.shape
-    # print(height, width, channels)
     maxDim = max(height, width)
     imageResized = cv2.resize(image, (maxDim, maxDim))  
-    # cv2.imwrite('resized_ROI_0.png', imageResized)
     
 # Get bounding box from contour, then get 
 # Region Of Interest (ROI) image from bounding box. 
@@ -276,22 +268,6 @@ def get_bounding_box_image(image, contours):
     # label rectangle with predicted digit caption text
     cv2.putText(copy, str(digit), (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 2.5, (36,255,12), 2)
     return copy
-    
-# image: Original image frame
-# contours: countours found from Canny edge image  
-# return: Original image with all countours drawn on it
-# def get_image_with_all_contours(image, contours): 
-    # return cv2.drawContours(image, contours, -1, (0, 255, 0), 3) 
-
-# # image: Original image frame
-# # contours: countours found from Canny edge image    
-# def get_image_with_biggest_contour(image, contours):
-    # # find the biggest countour (c) by the area
-    # c = max(contours, key = cv2.contourArea)
-    # x,y,w,h = cv2.boundingRect(c)
-    # # draw the biggest contour (c) in green
-    # image = cv2.rectangle(image,(x,y),(x+w,y+h),(0,255,0),2)
-    # return image
 
 # Get canny edge from one image frame
 IMAGE_FRAME_NAME = "frame10.jpg"
@@ -305,10 +281,6 @@ img_with_canny_edges = get_orig_image_with_canny_edges(img, canny_img)
 cv2.imshow("orig with edges", img_with_canny_edges)
 # Find and draw contours using Canny edges image
 contours = find_contours(canny_img)
-# img_with_all_contours = get_image_with_all_contours(img, contours)
-# cv2.imshow("orig with all contours", img_with_all_contours)
-# img_biggest_contour = get_image_with_biggest_contour(img, contours)
-# cv2.imshow("orig with biggest contour", img_biggest_contour)
 img_with_roi_bounding_box = get_bounding_box_image(img, contours)
 cv2.imshow("orig with ROI box", img_with_roi_bounding_box)
 # Press any key to close windows
