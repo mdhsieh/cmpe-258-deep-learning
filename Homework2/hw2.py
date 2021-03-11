@@ -28,6 +28,8 @@
 * Draw bounding box with text
 * https://stackoverflow.com/questions/56108183/python-opencv-cv2-drawing-rectangle-with-text
 * https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_contours/py_contour_features/py_contour_features.html
+* Resize image
+* https://stackoverflow.com/questions/19098104/python-opencv2-cv2-wrapper-to-get-image-size
 *
 * Notes:
 * 1. Uses tf.keras included in Tensorflow 2.0 instead of separate Keras installation.
@@ -231,13 +233,25 @@ def find_contours(edges):
         cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     return contours
     
+# Resize an image to its largest dimension, ex.
+# height 211px and width 125px image resized to 211x211 image.
+# Then resize this image to 28x28.
+# Purpose is to preserve aspect ratio.
+# image: The image
+def save_resized_image(image):
+    height, width, channels = image.shape
+    # print(height, width, channels)
+    maxDim = max(height, width)
+    imageResized = cv2.resize(image, (maxDim, maxDim))  
+    # cv2.imwrite('resized_ROI_0.png', imageResized)
+    
 # Get bounding box from contour, then get 
 # Region Of Interest (ROI) image from bounding box. 
 # Save the ROI image.
 # image: Original image frame
 # contours: countours found from Canny edge image 
 # returns: Copy of original image with bounding box
-def save_roi_image(image, contours):
+def get_bounding_box_image(image, contours):
     # find the biggest countour (c) by the area
     c = max(contours, key = cv2.contourArea)
     x,y,w,h = cv2.boundingRect(c)
@@ -249,10 +263,10 @@ def save_roi_image(image, contours):
     cv2.imwrite('ROI_{}.png'.format(ROI_number), ROI)
     
     # resize image
-    imageResized = cv2.resize(ROI, (28, 28))  
-    cv2.imwrite('resized_ROI_{}.png'.format(ROI_number), imageResized)
+    # save_resized_image(ROI)
+    
     # load the image
-    imgToArr = load_image('resized_ROI_{}.png'.format(ROI_number))  
+    imgToArr = load_image('ROI_{}.png'.format(ROI_number))  
     # predict the digit
     y_pred = model.predict_classes(imgToArr)
     digit = y_pred[0]
@@ -295,7 +309,7 @@ contours = find_contours(canny_img)
 # cv2.imshow("orig with all contours", img_with_all_contours)
 # img_biggest_contour = get_image_with_biggest_contour(img, contours)
 # cv2.imshow("orig with biggest contour", img_biggest_contour)
-img_with_roi_bounding_box = save_roi_image(img, contours)
+img_with_roi_bounding_box = get_bounding_box_image(img, contours)
 cv2.imshow("orig with ROI box", img_with_roi_bounding_box)
 # Press any key to close windows
 # waits indefinitely for a key stroke
