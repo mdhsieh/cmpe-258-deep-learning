@@ -240,29 +240,28 @@ def find_contours(edges):
 # Given an ROI image, create a new image with its largest dimension, ex.
 # 211px height and 125px width image resized to 211x211 image.
 # Purpose is to preserve aspect ratio.
-# Then resize this image to 28x28.
+# Then resize this image to 28x28. Convert to grayscale.
 # image: The image
 # returns: Square 28x28 image keeping ROI image's aspect ratio.
 def get_resized_image(image):
+
     height, width, channels = image.shape
-    # print(height, width)
+    # Create a black background square image with 
+    # size being the max dimension of ROI image
     maxDim = max(height, width)
     black_img = np.zeros((maxDim, maxDim, 3), dtype = "uint8")
-    # cv2.imwrite('black_bg.png', black_img)
     bg_height, bg_width, channels = black_img.shape
-    # print(bg_height,bg_width)
+    
+    # Use the ROI and black images' height and width
+    # to place ROI image in center of black image.
     
     # compute xoff and yoff for placement of upper left corner of resized image   
     yoff = round((bg_height-height)/2)
     xoff = round((bg_width-width)/2)
-    # print(yoff,xoff)
 
     # use numpy indexing to place the resized image in the center of background image
     result = black_img.copy()
     result[yoff:yoff+height, xoff:xoff+width] = image
-    
-    # save resulting centered image
-    # cv2.imwrite('resized_centered.png', result)
     
     # Resize the image to 28x28 pixels
     result_resized = cv2.resize(result, (28,28))
@@ -273,7 +272,8 @@ def get_resized_image(image):
     
 # Get bounding box from contour, then get 
 # Region Of Interest (ROI) image from bounding box. 
-# Save the ROI image.
+# Resize the ROI image and predict digit.
+# Then draw bounding box with predicted digit labeled on it.
 # image: Original image frame
 # contours: countours found from Canny edge image 
 # returns: Copy of original image with bounding box
@@ -319,6 +319,7 @@ img_with_canny_edges = get_orig_image_with_canny_edges(img, canny_img)
 cv2.imshow("orig with edges", img_with_canny_edges)
 # Find and draw contours using Canny edges image
 contours = find_contours(canny_img)
+# Get ROI image, predict digit, and draw original bounding box with labeled prediction.
 img_with_roi_bounding_box = get_bounding_box_image(img, contours)
 cv2.imshow("orig with ROI box", img_with_roi_bounding_box)
 # Press any key to close windows
