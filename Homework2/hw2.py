@@ -31,6 +31,10 @@
 * Resize image
 * https://stackoverflow.com/questions/19098104/python-opencv2-cv2-wrapper-to-get-image-size
 * https://stackoverflow.com/questions/44650888/resize-an-image-without-distortion-opencv
+* Create black image
+* https://stackoverflow.com/questions/40901906/create-a-black-image-with-specified-size-depth-channels-with-opencv-cv2-module
+* Place image in center of another
+* https://stackoverflow.com/questions/58248121/opencv-python-how-to-overlay-an-image-into-the-centre-of-another-image
 *
 * Notes:
 * 1. Uses tf.keras included in Tensorflow 2.0 instead of separate Keras installation.
@@ -112,8 +116,11 @@ model = load_model('harryTest.h5')
 model.compile(optimizer='rmsprop',
                 loss='categorical_crossentropy',
                 metrics=['accuracy'])
-            
-'''            
+        
+''' 
+# Test code, predicting digit and drawing bounding box with caption
+# on one sample image 
+           
 # load the image
 imgToArr = load_image('sample_image.png')  
 
@@ -234,8 +241,8 @@ def find_contours(edges):
 # 211px height and 125px width image resized to 211x211 image.
 # Purpose is to preserve aspect ratio.
 # Then resize this image to 28x28.
-# Use the 28x28 image to predict a digit.
 # image: The image
+# returns: Square 28x28 image keeping ROI image's aspect ratio.
 def get_resized_image(image):
     height, width, channels = image.shape
     # print(height, width)
@@ -256,7 +263,13 @@ def get_resized_image(image):
     
     # save resulting centered image
     # cv2.imwrite('resized_centered.png', result)
-    return result
+    
+    # Resize the image to 28x28 pixels
+    result_resized = cv2.resize(result, (28,28))
+    # Convert to grayscale
+    result_resized_gray = cv2.cvtColor(result_resized, cv2.COLOR_BGR2GRAY)
+    
+    return result_resized_gray
     
 # Get bounding box from contour, then get 
 # Region Of Interest (ROI) image from bounding box. 
@@ -279,6 +292,8 @@ def get_bounding_box_image(image, contours):
     resized_img = get_resized_image(ROI)
     cv2.imwrite('resized_ROI_{}.png'.format(ROI_number), resized_img)
     
+    # Use the resized ROI image to predict the digit inside ROI.
+    
     # load the image
     imgToArr = load_image('resized_ROI_{}.png'.format(ROI_number))  
     # predict the digit
@@ -291,6 +306,7 @@ def get_bounding_box_image(image, contours):
     cv2.putText(copy, str(digit), (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 2.5, (36,255,12), 2)
     return copy
 
+# Main
 # Get canny edge from one image frame
 IMAGE_FRAME_NAME = "frame10.jpg"
 img = get_orig_image(IMAGE_FRAME_NAME)
