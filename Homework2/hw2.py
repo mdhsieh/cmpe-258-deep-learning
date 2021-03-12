@@ -30,6 +30,7 @@
 * https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_contours/py_contour_features/py_contour_features.html
 * Resize image
 * https://stackoverflow.com/questions/19098104/python-opencv2-cv2-wrapper-to-get-image-size
+* https://stackoverflow.com/questions/44650888/resize-an-image-without-distortion-opencv
 *
 * Notes:
 * 1. Uses tf.keras included in Tensorflow 2.0 instead of separate Keras installation.
@@ -111,7 +112,8 @@ model = load_model('harryTest.h5')
 model.compile(optimizer='rmsprop',
                 loss='categorical_crossentropy',
                 metrics=['accuracy'])
-                
+            
+'''            
 # load the image
 imgToArr = load_image('sample_image.png')  
 
@@ -141,7 +143,7 @@ imageResized = cv2.resize(image, (760, 540))
 cv2.imshow('contours', imageResized)
 # Press q to quit
 cv2.waitKey(0) & 0xFF == ord('q')
-
+'''
 
 # video capture saved as image frames, then image frames processed
 import numpy as np
@@ -222,20 +224,39 @@ def find_contours(edges):
     # Finding Contours 
     edges_copy = edges.copy()
     # Use a copy of the image e.g. edged.copy() 
-    # since findContours alters the image 
+    # since findContours alters the image.
+    # Retrieve external contours only
     contours, hierarchy = cv2.findContours(edges_copy,  
         cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     return contours
     
-# Resize an image to its largest dimension, ex.
-# height 211px and width 125px image resized to 211x211 image.
-# Then resize this image to 28x28.
+# Given an ROI image, create a new image with its largest dimension, ex.
+# 211px height and 125px width image resized to 211x211 image.
 # Purpose is to preserve aspect ratio.
+# Then resize this image to 28x28.
+# Use the 28x28 image to predict a digit.
 # image: The image
-def save_resized_image(image):
+def get_resized_image(image):
     height, width, channels = image.shape
+    # print(height, width)
     maxDim = max(height, width)
-    imageResized = cv2.resize(image, (maxDim, maxDim))  
+    black_img = np.zeros((maxDim, maxDim, 3), dtype = "uint8")
+    # cv2.imwrite('black_bg.png', black_img)
+    bg_height, bg_width, channels = black_img.shape
+    # print(bg_height,bg_width)
+    
+    # compute xoff and yoff for placement of upper left corner of resized image   
+    yoff = round((bg_height-height)/2)
+    xoff = round((bg_width-width)/2)
+    # print(yoff,xoff)
+
+    # use numpy indexing to place the resized image in the center of background image
+    result = black_img.copy()
+    result[yoff:yoff+height, xoff:xoff+width] = image
+    
+    # save resulting centered image
+    # cv2.imwrite('resized_centered.png', result)
+    return result
     
 # Get bounding box from contour, then get 
 # Region Of Interest (ROI) image from bounding box. 
@@ -254,11 +275,12 @@ def get_bounding_box_image(image, contours):
     # Save ROI image
     cv2.imwrite('ROI_{}.png'.format(ROI_number), ROI)
     
-    # resize image
-    # save_resized_image(ROI)
+    # resize image and save
+    resized_img = get_resized_image(ROI)
+    cv2.imwrite('resized_ROI_{}.png'.format(ROI_number), resized_img)
     
     # load the image
-    imgToArr = load_image('ROI_{}.png'.format(ROI_number))  
+    imgToArr = load_image('resized_ROI_{}.png'.format(ROI_number))  
     # predict the digit
     y_pred = model.predict_classes(imgToArr)
     digit = y_pred[0]
