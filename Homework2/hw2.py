@@ -210,42 +210,43 @@ def get_resized_image(image):
 # returns: Copy of original image with bounding box
 def get_bounding_box_image(image, contours):
     # find the biggest countour (c) by the area
-    c = max(contours, key = cv2.contourArea)
+    # c = max(contours, key = cv2.contourArea)
     
     # Set a minimum area so unecessary contours are eliminated
-    MIN_AREA = 25
+    MIN_AREA = 50
     
     ROI_number = 0
     copy = image.copy()
-    # for c in contours:
-        # if cv2.contourArea(c) > MIN_AREA:
-    x,y,w,h = cv2.boundingRect(c)
-    
-    ROI = image[y:y+h, x:x+w]
-    # Save ROI image
-    # cv2.imwrite('rois/ROI_{}.png'.format(ROI_number), ROI)
-    
-    # resize image and save
-    resized_img = get_resized_image(ROI)
-    # cv2.imwrite('rois-resized/resized_ROI_{}.png'.format(ROI_number), resized_img)
-    
-    # Use the resized ROI image to predict the digit inside ROI.
-    
-    # load the image
-    # imgToArr = load_image('rois-resized/resized_ROI_{}.png'.format(ROI_number)) 
-    
-    imgToArr = reshape_image(resized_img)
-    
-    # predict the digit
-    y_pred = model.predict_classes(imgToArr)
-    digit = y_pred[0]
-    # print(digit)
-    
-    ROI_number += 1
-    
-    copy = cv2.rectangle(copy,(x,y),(x+w,y+h),(36,255,12),2)
-    # label rectangle with predicted digit caption text
-    cv2.putText(copy, str(digit), (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 2.5, (36,255,12), 2)
+    for c in contours:
+        if cv2.contourArea(c) > MIN_AREA:
+            x,y,w,h = cv2.boundingRect(c)
+            
+            ROI = image[y:y+h, x:x+w]
+            # Save ROI image
+            # cv2.imwrite('rois/ROI_{}.png'.format(ROI_number), ROI)
+            
+            # resize image
+            resized_img = get_resized_image(ROI)
+            # Save resized ROI image
+            # cv2.imwrite('rois-resized/resized_ROI_{}.png'.format(ROI_number), resized_img)
+            
+            # Use the resized ROI image to predict the digit inside ROI.
+            
+            # load the image
+            # imgToArr = load_image('rois-resized/resized_ROI_{}.png'.format(ROI_number)) 
+            
+            imgToArr = reshape_image(resized_img)
+            
+            # predict the digit
+            y_pred = model.predict_classes(imgToArr)
+            digit = y_pred[0]
+            # print(digit)
+            
+            ROI_number += 1
+            
+            copy = cv2.rectangle(copy,(x,y),(x+w,y+h),(36,255,12),2)
+            # label rectangle with predicted digit caption text
+            cv2.putText(copy, str(digit), (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 2.5, (36,255,12), 2)
     return copy
 
 '''
@@ -254,8 +255,10 @@ IMAGE_FRAME_NAME = "frame10.jpg"
 img = get_orig_image(IMAGE_FRAME_NAME)
 cv2.imshow("original", img)
 gray_img = convert_image_to_grayscale(IMAGE_FRAME_NAME)
-cv2.imshow("gray_image", gray_img)
+cv2.imshow("gray image", gray_img)
+        
 canny_img = get_canny_edges(gray_img)
+
 cv2.imshow("Canny edges", canny_img)
 img_with_canny_edges = get_orig_image_with_canny_edges(img, canny_img)
 cv2.imshow("orig with edges", img_with_canny_edges)
@@ -272,6 +275,7 @@ cv2.destroyAllWindows()
 
 # Get bounding boxes with predicted digit in live video capture
 def video_capture():
+
     cap = cv2.VideoCapture(0)
 
     while(True):
@@ -279,7 +283,9 @@ def video_capture():
         ret, img = cap.read() 
 
         gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        
         canny_img = get_canny_edges(gray_img)
+        
         img_with_canny_edges = get_orig_image_with_canny_edges(img, canny_img)
 
         cv2.imshow('orig',img)
