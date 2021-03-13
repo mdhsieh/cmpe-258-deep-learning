@@ -53,7 +53,6 @@ from tensorflow.keras.preprocessing.image import load_img
 from tensorflow.keras.preprocessing.image import img_to_array
 from tensorflow.keras.models import load_model
 
-'''
 # load and prepare the image
 def load_image(filename):
     # load the image
@@ -66,8 +65,8 @@ def load_image(filename):
     img = img.astype('float32')
     img = img / 255.0
     return img
-'''
     
+'''
 # Reshape image array into format that model needs to make prediction
 # img: Image array
 def reshape_image(img):
@@ -77,6 +76,7 @@ def reshape_image(img):
     img = img.astype('float32')
     img = img / 255.0
     return img
+'''
 
 # load model
 model = load_model('harryTest.h5')
@@ -190,7 +190,7 @@ def get_resized_image(image):
     
     return result_resized_gray
     
-    
+'''
 # Get bounding box from contour, then get 
 # Region Of Interest (ROI) image from bounding box. 
 # Resize the ROI image and predict digit.
@@ -199,8 +199,6 @@ def get_resized_image(image):
 # contours: countours found from Canny edge image 
 # returns: Copy of original image with bounding box
 def get_bounding_box_image(image, contours):
-    # find the biggest countour (c) by the area
-    # c = max(contours, key = cv2.contourArea)
     
     # Set a minimum area so unecessary contours are eliminated
     MIN_AREA = 50
@@ -223,14 +221,66 @@ def get_bounding_box_image(image, contours):
             # Use the resized ROI image to predict the digit inside ROI.
             
             # load the image
-            # imgToArr = load_image('rois-resized/resized_ROI_{}.png'.format(ROI_number)) 
+            imgToArr = load_image('rois-resized/resized_ROI_{}.png'.format(ROI_number)) 
             
-            imgToArr = reshape_image(resized_img)
+            # imgToArr = reshape_image(resized_img)
             
             # predict the digit
             y_pred = model.predict_classes(imgToArr)
             digit = y_pred[0]
-            # print(digit)
+            print(digit)
+            
+            ROI_number += 1
+            
+            copy = cv2.rectangle(copy,(x,y),(x+w,y+h),(36,255,12),2)
+            # label rectangle with predicted digit caption text
+            cv2.putText(copy, str(digit), (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 2.5, (36,255,12), 2)
+    return copy
+'''
+
+# Get bounding box from contour, then get 
+# Region Of Interest (ROI) image from bounding box. 
+# Resize the ROI image and predict digit.
+# Then draw bounding box with predicted digit labeled on it.
+# image: Original image frame
+# contours: countours found from Canny edge image 
+# frame_num: Image frame number, 
+# used to create a folder with same name that has the frame's ROIs
+# returns: Copy of original image with bounding box
+def get_bounding_box_image(image, contours, frame_num):
+    
+    ROI_FOLDER = "rois/"
+    RESIZED_ROI_FOLDER = "rois-resized/"
+    
+    # Set a minimum area so unecessary contours are eliminated
+    MIN_AREA = 50
+    
+    ROI_number = 0
+    copy = image.copy()
+    for c in contours:
+        if cv2.contourArea(c) > MIN_AREA:
+            x,y,w,h = cv2.boundingRect(c)
+            
+            ROI = image[y:y+h, x:x+w]
+            # Save ROI image
+            roi_path = ROI_FOLDER + frame_num + "_" + "ROI_{}.png".format(ROI_number)
+            cv2.imwrite(roi_path, ROI)
+            
+            # resize image
+            resized_img = get_resized_image(ROI)
+            # Save resized ROI image
+            resized_roi_path = RESIZED_ROI_FOLDER + frame_num + "_" + "resized_ROI_{}.png".format(ROI_number)
+            cv2.imwrite(resized_roi_path, resized_img)
+            
+            # Use the resized ROI image to predict the digit inside ROI.
+            
+            # load the image
+            imgToArr = load_image(resized_roi_path) 
+                        
+            # predict the digit
+            y_pred = model.predict_classes(imgToArr)
+            digit = y_pred[0]
+            print(digit)
             
             ROI_number += 1
             
@@ -241,10 +291,16 @@ def get_bounding_box_image(image, contours):
 
 # video downloaded from capture saved as image frames, then image frames processed
 # VIDEO_NAME = "sample_input_video.avi"
+
+# get image frame number
+import os
+
 # capture_video(VIDEO_NAME) 
 # save_image_frames(VIDEO_NAME)   
 
+# sort filenames
 import glob
+
 filenames = [img for img in glob.glob("frames/frame*.jpg")]
 
 # sort image frames in order
@@ -254,12 +310,16 @@ images = []
 for img in filenames:
     n= cv2.imread(img)
     images.append(n)
-    # print(img)
+    print(img)
     
 for img in filenames:
     # Get bounding boxes with predicted digit from one image frame
     # for example "frames/frame0000.jpg"
     IMAGE_FRAME_NAME = img
+    
+    frame_name_without_extensions = os.path.splitext(IMAGE_FRAME_NAME)[0]
+    FRAME_NUM = frame_name_without_extensions.split("frames",1)[1] 
+    
     img = cv2.imread(IMAGE_FRAME_NAME, cv2.IMREAD_COLOR)
     cv2.imshow("original", img)
     gray_img = cv2.imread(IMAGE_FRAME_NAME, cv2.IMREAD_GRAYSCALE)
@@ -273,7 +333,7 @@ for img in filenames:
     # Find and draw contours using Canny edges image
     contours = find_contours(canny_img)
     # Get ROI image, predict digit, and draw original bounding box with labeled prediction.
-    img_with_roi_bounding_box = get_bounding_box_image(img, contours)
+    img_with_roi_bounding_box = get_bounding_box_image(img, contours, FRAME_NUM)
     cv2.imshow("orig with ROI box", img_with_roi_bounding_box)
     # Press any key to close windows
     # waits indefinitely for a key stroke
