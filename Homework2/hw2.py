@@ -84,13 +84,13 @@ model.compile(optimizer='rmsprop',
                 loss='categorical_crossentropy',
                 metrics=['accuracy'])
 
-# video capture saved as image frames, then image frames processed
-'''
+# Capture live video, then save the video with given name.
+# Using .avi extension
 # output_video_name: Name of the video saved from capture
-def capture_video(output_video_name):
+def capture_video(saved_video_name):
     # Define the codec and create VideoWriter object
     fourcc = cv2.VideoWriter_fourcc(*'DIVX')
-    out = cv2.VideoWriter('output.avi',fourcc, 20.0, (640,480))
+    out = cv2.VideoWriter(saved_video_name,fourcc, 20.0, (640,480))
 
     cap = cv2.VideoCapture(0)
 
@@ -114,32 +114,22 @@ def capture_video(output_video_name):
 # Get image frames from captured video
 # input_video_name: Name of the video to save image frames from
 def save_image_frames(input_video_name):
-    videoName = "output-3.avi"
+    videoName = input_video_name
     cap = cv2.VideoCapture(videoName)
-    ret, frame = cap.read()
+    success, frame = cap.read()
         
     count = 0
     while success:
       # save 1 frame per second
       cap.set(cv2.CAP_PROP_POS_MSEC,(count*1000))
+      # filename = "frames/frame%d.jpg" % count
+      # num is 4 characters long with leading 0
+      filename = "frames/frame%s.jpg" % str(count).zfill(4)
       # save frame as JPEG file      
-      cv2.imwrite("frame%d.jpg" % count, frame)
-      ret, frame = cap.read()
-      print('Read a new frame: ', ret)
+      cv2.imwrite(filename, frame)
+      success, frame = cap.read()
+      print('Read a new frame: ', success)
       count += 1    
-'''
-# image_name: Image name
-# returns: The image
-def get_orig_image(image_name):
-    img = cv2.imread(image_name, cv2.IMREAD_COLOR)
-    return img
-      
-# Convert image frame to grayscale
-# image_name: Image name
-# returns: Grayscale image
-def convert_image_to_grayscale(image_name):
-    img = cv2.imread(image_name, cv2.IMREAD_GRAYSCALE)
-    return img
 
 # gray_image: Grayscale image
 # returns: Canny edge image, which is black and white
@@ -249,30 +239,48 @@ def get_bounding_box_image(image, contours):
             cv2.putText(copy, str(digit), (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 2.5, (36,255,12), 2)
     return copy
 
-'''
-# Get bounding boxes with predicted digit from one image frame
-IMAGE_FRAME_NAME = "frame10.jpg"
-img = get_orig_image(IMAGE_FRAME_NAME)
-cv2.imshow("original", img)
-gray_img = convert_image_to_grayscale(IMAGE_FRAME_NAME)
-cv2.imshow("gray image", gray_img)
-        
-canny_img = get_canny_edges(gray_img)
+# video downloaded from capture saved as image frames, then image frames processed
+# VIDEO_NAME = "sample_input_video.avi"
+# capture_video(VIDEO_NAME) 
+# save_image_frames(VIDEO_NAME)   
 
-cv2.imshow("Canny edges", canny_img)
-img_with_canny_edges = get_orig_image_with_canny_edges(img, canny_img)
-cv2.imshow("orig with edges", img_with_canny_edges)
-# Find and draw contours using Canny edges image
-contours = find_contours(canny_img)
-# Get ROI image, predict digit, and draw original bounding box with labeled prediction.
-img_with_roi_bounding_box = get_bounding_box_image(img, contours)
-cv2.imshow("orig with ROI box", img_with_roi_bounding_box)
-# Press any key to close windows
-# waits indefinitely for a key stroke
-k = cv2.waitKey(0) & 0xFF
-cv2.destroyAllWindows()
-'''
+import glob
+filenames = [img for img in glob.glob("frames/frame*.jpg")]
 
+# sort image frames in order
+filenames.sort()
+
+images = []
+for img in filenames:
+    n= cv2.imread(img)
+    images.append(n)
+    # print(img)
+    
+for img in filenames:
+    # Get bounding boxes with predicted digit from one image frame
+    # for example "frames/frame0000.jpg"
+    IMAGE_FRAME_NAME = img
+    img = cv2.imread(IMAGE_FRAME_NAME, cv2.IMREAD_COLOR)
+    cv2.imshow("original", img)
+    gray_img = cv2.imread(IMAGE_FRAME_NAME, cv2.IMREAD_GRAYSCALE)
+    cv2.imshow("gray image", gray_img)
+            
+    canny_img = get_canny_edges(gray_img)
+
+    cv2.imshow("Canny edges", canny_img)
+    img_with_canny_edges = get_orig_image_with_canny_edges(img, canny_img)
+    cv2.imshow("orig with edges", img_with_canny_edges)
+    # Find and draw contours using Canny edges image
+    contours = find_contours(canny_img)
+    # Get ROI image, predict digit, and draw original bounding box with labeled prediction.
+    img_with_roi_bounding_box = get_bounding_box_image(img, contours)
+    cv2.imshow("orig with ROI box", img_with_roi_bounding_box)
+    # Press any key to close windows
+    # waits indefinitely for a key stroke
+    k = cv2.waitKey(0) & 0xFF
+    cv2.destroyAllWindows()
+
+'''
 # Get bounding boxes with predicted digit in live video capture
 def video_capture():
 
@@ -308,3 +316,4 @@ def video_capture():
 
 # Main
 video_capture()
+'''
