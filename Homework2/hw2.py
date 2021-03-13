@@ -45,59 +45,15 @@
 from tensorflow.keras.models import load_model
 import cv2
 
-# previous video capture function directly using frames from live video
-'''
-# video capture
+# do bitwise or to show Canny edges on original image
 import numpy as np
-
-def video_capture():
-    cap = cv2.VideoCapture(0)
-
-    while(True):
-
-        ret, frame = cap.read() 
-
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        edges = cv2.Canny(gray,100,200)
-
-        cv2.imshow('original',frame)
-        cv2.imshow('gray scale',gray)
-        cv2.imshow('Canny edges',edges)
-        
-        # Show Canny edges on original image
-        # for bitwise_or the shape needs to be the same, so we need to add an axis, 
-        # since our input image has 3 axis while the canny output image has only one 2 axis
-        out = np.bitwise_or(frame, edges[:,:,np.newaxis])
-        cv2.imshow('orig with edges', out)
-        
-        # Finding Contours 
-        edges_copy = edges.copy()
-        # Use a copy of the image e.g. edged.copy() 
-        # since findContours alters the image 
-        contours, hierarchy = cv2.findContours(edges_copy,  
-            cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-        
-        # find the biggest countour (c) by the area
-        c = max(contours, key = cv2.contourArea)
-        x,y,w,h = cv2.boundingRect(c)
-        # draw the biggest contour (c) in green
-        frame = cv2.rectangle(frame,(x,y),(x+w,y+h),(0,255,0),2)
-          
-        cv2.imshow('Contours', frame)
-
-        # press q to quit
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-     
-    cap.release()
-    cv2.destroyAllWindows()
-'''
           
 # make a prediction for a new image.
 from tensorflow.keras.preprocessing.image import load_img
 from tensorflow.keras.preprocessing.image import img_to_array
 from tensorflow.keras.models import load_model
 
+'''
 # load and prepare the image
 def load_image(filename):
     # load the image
@@ -110,50 +66,25 @@ def load_image(filename):
     img = img.astype('float32')
     img = img / 255.0
     return img
+'''
+    
+# Reshape image array into format that model needs to make prediction
+# img: Image array
+def reshape_image(img):
+    # reshape into a single sample with 1 channel
+    img = img.reshape(1, 28, 28, 1)
+    # prepare pixel data
+    img = img.astype('float32')
+    img = img / 255.0
+    return img
 
 # load model
 model = load_model('harryTest.h5')
 model.compile(optimizer='rmsprop',
                 loss='categorical_crossentropy',
                 metrics=['accuracy'])
-        
-''' 
-# Test code, predicting digit and drawing bounding box with caption
-# on one sample image 
-           
-# load the image
-imgToArr = load_image('sample_image.png')  
-
-# predict the class
-y_pred = model.predict_classes(imgToArr)
-print(y_pred)
-
-# Test code
-# draw bounding box with predicted digit caption text
-
-# find contours of a binary image
-im = cv2.imread('sample_image.png')
-imgray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
-ret, thresh = cv2.threshold(imgray,127,255,0)
-contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)# contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-
-# find the biggest countour (c) by the area
-c = max(contours, key = cv2.contourArea)
-x,y,w,h = cv2.boundingRect(c)
-# draw the biggest contour (c) in green
-image = cv2.rectangle(im,(x,y),(x+w,y+h),(0,255,0),2)
-# label rectangle with predicted digit caption text
-cv2.putText(image, str(y_pred[0]), (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 2.5, (36,255,12), 2)
-
-# Resize image
-imageResized = cv2.resize(image, (760, 540))                    
-cv2.imshow('contours', imageResized)
-# Press q to quit
-cv2.waitKey(0) & 0xFF == ord('q')
-'''
 
 # video capture saved as image frames, then image frames processed
-import numpy as np
 
 # output_video_name: Name of the video saved from capture
 def capture_video(output_video_name):
@@ -241,10 +172,9 @@ def find_contours(edges):
 # 211px height and 125px width image resized to 211x211 image.
 # Purpose is to preserve aspect ratio.
 # Then resize this image to 28x28. Convert to grayscale.
-# image: The image
+# image: ROI image
 # returns: Square 28x28 image keeping ROI image's aspect ratio.
 def get_resized_image(image):
-
     height, width, channels = image.shape
     # Create a black background square image with 
     # size being the max dimension of ROI image
@@ -270,6 +200,7 @@ def get_resized_image(image):
     
     return result_resized_gray
     
+    
 # Get bounding box from contour, then get 
 # Region Of Interest (ROI) image from bounding box. 
 # Resize the ROI image and predict digit.
@@ -280,26 +211,33 @@ def get_resized_image(image):
 def get_bounding_box_image(image, contours):
     # find the biggest countour (c) by the area
     c = max(contours, key = cv2.contourArea)
+    
+    ROI_number = 0
+    copy = image.copy()
+    # for c in contours:
     x,y,w,h = cv2.boundingRect(c)
     
-    copy = image.copy()
-    ROI_number = 0
     ROI = image[y:y+h, x:x+w]
     # Save ROI image
-    cv2.imwrite('ROI_{}.png'.format(ROI_number), ROI)
+    # cv2.imwrite('rois/ROI_{}.png'.format(ROI_number), ROI)
     
     # resize image and save
     resized_img = get_resized_image(ROI)
-    cv2.imwrite('resized_ROI_{}.png'.format(ROI_number), resized_img)
+    # cv2.imwrite('rois-resized/resized_ROI_{}.png'.format(ROI_number), resized_img)
     
     # Use the resized ROI image to predict the digit inside ROI.
     
     # load the image
-    imgToArr = load_image('resized_ROI_{}.png'.format(ROI_number))  
+    # imgToArr = load_image('rois-resized/resized_ROI_{}.png'.format(ROI_number)) 
+    
+    imgToArr = reshape_image(resized_img)
+    
     # predict the digit
     y_pred = model.predict_classes(imgToArr)
     digit = y_pred[0]
-    print(digit)
+    # print(digit)
+    
+    ROI_number += 1
     
     copy = cv2.rectangle(copy,(x,y),(x+w,y+h),(36,255,12),2)
     # label rectangle with predicted digit caption text
@@ -307,7 +245,8 @@ def get_bounding_box_image(image, contours):
     return copy
 
 # Main
-# Get canny edge from one image frame
+'''
+# Get bounding boxes with predicted digit from one image frame
 IMAGE_FRAME_NAME = "frame10.jpg"
 img = get_orig_image(IMAGE_FRAME_NAME)
 cv2.imshow("original", img)
@@ -326,3 +265,36 @@ cv2.imshow("orig with ROI box", img_with_roi_bounding_box)
 # waits indefinitely for a key stroke
 k = cv2.waitKey(0) & 0xFF
 cv2.destroyAllWindows()
+'''
+
+# Get bounding boxes with predicted digit in live video capture
+def video_capture():
+    cap = cv2.VideoCapture(0)
+
+    while(True):
+
+        ret, img = cap.read() 
+
+        gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        canny_img = get_canny_edges(gray_img)
+        img_with_canny_edges = get_orig_image_with_canny_edges(img, canny_img)
+
+        cv2.imshow('orig',img)
+        cv2.imshow('gray scale',gray_img)
+        cv2.imshow('Canny edges',canny_img)
+        cv2.imshow('orig with edges', img_with_canny_edges)
+        
+        contours = find_contours(canny_img)
+        
+        img_with_roi_bounding_box = get_bounding_box_image(img, contours)
+        
+        cv2.imshow("orig with ROI box", img_with_roi_bounding_box)
+
+        # press q to quit
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+     
+    cap.release()
+    cv2.destroyAllWindows()
+    
+video_capture()
