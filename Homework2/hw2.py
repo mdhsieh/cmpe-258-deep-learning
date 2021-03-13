@@ -53,7 +53,6 @@ from tensorflow.keras.preprocessing.image import load_img
 from tensorflow.keras.preprocessing.image import img_to_array
 from tensorflow.keras.models import load_model
     
-'''
 # Reshape image array into format that model needs to make prediction
 # img: Image array
 def reshape_image(img):
@@ -63,7 +62,6 @@ def reshape_image(img):
     img = img.astype('float32')
     img = img / 255.0
     return img
-'''
 
 # load model
 model = load_model('harryTest.h5')
@@ -130,7 +128,6 @@ def get_resized_image(image):
     
     return result_resized_gray
     
-'''
 # Get bounding box from contour, then get 
 # Region Of Interest (ROI) image from bounding box. 
 # Resize the ROI image and predict digit.
@@ -150,25 +147,17 @@ def get_bounding_box_image(image, contours):
             x,y,w,h = cv2.boundingRect(c)
             
             ROI = image[y:y+h, x:x+w]
-            # Save ROI image
-            # cv2.imwrite('rois/ROI_{}.png'.format(ROI_number), ROI)
             
             # resize image
             resized_img = get_resized_image(ROI)
-            # Save resized ROI image
-            # cv2.imwrite('rois-resized/resized_ROI_{}.png'.format(ROI_number), resized_img)
             
             # Use the resized ROI image to predict the digit inside ROI.
             
-            # load the image
-            imgToArr = load_image('rois-resized/resized_ROI_{}.png'.format(ROI_number)) 
-            
-            # imgToArr = reshape_image(resized_img)
+            imgToArr = reshape_image(resized_img)
             
             # predict the digit
             y_pred = model.predict_classes(imgToArr)
             digit = y_pred[0]
-            print(digit)
             
             ROI_number += 1
             
@@ -176,10 +165,7 @@ def get_bounding_box_image(image, contours):
             # label rectangle with predicted digit caption text
             cv2.putText(copy, str(digit), (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 2.5, (36,255,12), 2)
     return copy
-'''
 
-
-'''
 # Get bounding boxes with predicted digit in live video capture
 def video_capture():
 
@@ -215,8 +201,14 @@ def video_capture():
 
 # Main
 video_capture()
-'''
 
+
+# Comment out main  video_capture() function and uncomment this block to 
+# save an input video as image frames,
+# save the ROIs and resized ROIs from each image frame, and then
+# display each frame with labeled bounding boxes.
+# Current folders have frames and ROIs from sample_input_video.avi
+'''
 # load and prepare the image
 def load_image(filename):
     # load the image
@@ -377,3 +369,4 @@ for img in filenames:
     # waits indefinitely for a key stroke
     k = cv2.waitKey(0) & 0xFF
     cv2.destroyAllWindows()
+'''
