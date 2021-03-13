@@ -85,7 +85,7 @@ model.compile(optimizer='rmsprop',
                 metrics=['accuracy'])
 
 # video capture saved as image frames, then image frames processed
-
+'''
 # output_video_name: Name of the video saved from capture
 def capture_video(output_video_name):
     # Define the codec and create VideoWriter object
@@ -127,7 +127,7 @@ def save_image_frames(input_video_name):
       ret, frame = cap.read()
       print('Read a new frame: ', ret)
       count += 1    
-
+'''
 # image_name: Image name
 # returns: The image
 def get_orig_image(image_name):
@@ -212,9 +212,13 @@ def get_bounding_box_image(image, contours):
     # find the biggest countour (c) by the area
     c = max(contours, key = cv2.contourArea)
     
+    # Set a minimum area so unecessary contours are eliminated
+    MIN_AREA = 25
+    
     ROI_number = 0
     copy = image.copy()
     # for c in contours:
+        # if cv2.contourArea(c) > MIN_AREA:
     x,y,w,h = cv2.boundingRect(c)
     
     ROI = image[y:y+h, x:x+w]
@@ -244,7 +248,6 @@ def get_bounding_box_image(image, contours):
     cv2.putText(copy, str(digit), (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 2.5, (36,255,12), 2)
     return copy
 
-# Main
 '''
 # Get bounding boxes with predicted digit from one image frame
 IMAGE_FRAME_NAME = "frame10.jpg"
@@ -296,5 +299,6 @@ def video_capture():
      
     cap.release()
     cv2.destroyAllWindows()
-    
+
+# Main
 video_capture()
