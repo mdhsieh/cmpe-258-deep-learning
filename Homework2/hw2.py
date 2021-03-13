@@ -52,19 +52,6 @@ import numpy as np
 from tensorflow.keras.preprocessing.image import load_img
 from tensorflow.keras.preprocessing.image import img_to_array
 from tensorflow.keras.models import load_model
-
-# load and prepare the image
-def load_image(filename):
-    # load the image
-    img = load_img(filename, color_mode="grayscale", target_size=(28, 28))
-    # convert to array
-    img = img_to_array(img)
-    # reshape into a single sample with 1 channel
-    img = img.reshape(1, 28, 28, 1)
-    # prepare pixel data
-    img = img.astype('float32')
-    img = img / 255.0
-    return img
     
 '''
 # Reshape image array into format that model needs to make prediction
@@ -83,53 +70,6 @@ model = load_model('harryTest.h5')
 model.compile(optimizer='rmsprop',
                 loss='categorical_crossentropy',
                 metrics=['accuracy'])
-
-# Capture live video, then save the video with given name.
-# Using .avi extension
-# output_video_name: Name of the video saved from capture
-def capture_video(saved_video_name):
-    # Define the codec and create VideoWriter object
-    fourcc = cv2.VideoWriter_fourcc(*'DIVX')
-    out = cv2.VideoWriter(saved_video_name,fourcc, 20.0, (640,480))
-
-    cap = cv2.VideoCapture(0)
-
-    while(cap.isOpened()):
-
-        ret, frame = cap.read() 
-
-        # write the image frame
-        out.write(frame)
-
-        cv2.imshow('original',frame)
-
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-    # Release everything if job is finished
-    cap.release()
-    out.release()
-    cv2.destroyAllWindows()
-
-# Get image frames from captured video
-# input_video_name: Name of the video to save image frames from
-def save_image_frames(input_video_name):
-    videoName = input_video_name
-    cap = cv2.VideoCapture(videoName)
-    success, frame = cap.read()
-        
-    count = 0
-    while success:
-      # save 1 frame per second
-      cap.set(cv2.CAP_PROP_POS_MSEC,(count*1000))
-      # filename = "frames/frame%d.jpg" % count
-      # num is 4 characters long with leading 0
-      filename = "frames/frame%s.jpg" % str(count).zfill(4)
-      # save frame as JPEG file      
-      cv2.imwrite(filename, frame)
-      success, frame = cap.read()
-      print('Read a new frame: ', success)
-      count += 1    
 
 # gray_image: Grayscale image
 # returns: Canny edge image, which is black and white
@@ -238,6 +178,105 @@ def get_bounding_box_image(image, contours):
     return copy
 '''
 
+
+'''
+# Get bounding boxes with predicted digit in live video capture
+def video_capture():
+
+    cap = cv2.VideoCapture(0)
+
+    while(True):
+
+        ret, img = cap.read() 
+
+        gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        
+        canny_img = get_canny_edges(gray_img)
+        
+        img_with_canny_edges = get_orig_image_with_canny_edges(img, canny_img)
+
+        cv2.imshow('orig',img)
+        cv2.imshow('gray scale',gray_img)
+        cv2.imshow('Canny edges',canny_img)
+        cv2.imshow('orig with edges', img_with_canny_edges)
+        
+        contours = find_contours(canny_img)
+        
+        img_with_roi_bounding_box = get_bounding_box_image(img, contours)
+        
+        cv2.imshow("orig with ROI box", img_with_roi_bounding_box)
+
+        # press q to quit
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+     
+    cap.release()
+    cv2.destroyAllWindows()
+
+# Main
+video_capture()
+'''
+
+# load and prepare the image
+def load_image(filename):
+    # load the image
+    img = load_img(filename, color_mode="grayscale", target_size=(28, 28))
+    # convert to array
+    img = img_to_array(img)
+    # reshape into a single sample with 1 channel
+    img = img.reshape(1, 28, 28, 1)
+    # prepare pixel data
+    img = img.astype('float32')
+    img = img / 255.0
+    return img
+
+# Capture live video, then save the video with given name.
+# Using .avi extension
+# output_video_name: Name of the video saved from capture
+def capture_video(saved_video_name):
+    # Define the codec and create VideoWriter object
+    fourcc = cv2.VideoWriter_fourcc(*'DIVX')
+    out = cv2.VideoWriter(saved_video_name,fourcc, 20.0, (640,480))
+
+    cap = cv2.VideoCapture(0)
+
+    while(cap.isOpened()):
+
+        ret, frame = cap.read() 
+
+        # write the image frame
+        out.write(frame)
+
+        cv2.imshow('original',frame)
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    # Release everything if job is finished
+    cap.release()
+    out.release()
+    cv2.destroyAllWindows()
+
+# Get image frames from captured video
+# input_video_name: Name of the video to save image frames from
+def save_image_frames(input_video_name):
+    videoName = input_video_name
+    cap = cv2.VideoCapture(videoName)
+    success, frame = cap.read()
+        
+    count = 0
+    while success:
+      # save 1 frame per second
+      cap.set(cv2.CAP_PROP_POS_MSEC,(count*1000))
+      # filename = "frames/frame%d.jpg" % count
+      # num is 4 characters long with leading 0
+      filename = "frames/frame%s.jpg" % str(count).zfill(4)
+      # save frame as JPEG file      
+      cv2.imwrite(filename, frame)
+      success, frame = cap.read()
+      print('Read a new frame: ', success)
+      count += 1    
+
 # Get bounding box from contour, then get 
 # Region Of Interest (ROI) image from bounding box. 
 # Resize the ROI image and predict digit.
@@ -289,17 +328,16 @@ def get_bounding_box_image(image, contours, frame_num):
             cv2.putText(copy, str(digit), (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 2.5, (36,255,12), 2)
     return copy
 
-# video downloaded from capture saved as image frames, then image frames processed
-# VIDEO_NAME = "sample_input_video.avi"
-
 # get image frame number
 import os
 
-# capture_video(VIDEO_NAME) 
-# save_image_frames(VIDEO_NAME)   
-
 # sort filenames
 import glob
+
+# video downloaded from capture saved as image frames, then image frames processed
+# VIDEO_NAME = "sample_input_video.avi"
+# capture_video(VIDEO_NAME) 
+# save_image_frames(VIDEO_NAME)   
 
 filenames = [img for img in glob.glob("frames/frame*.jpg")]
 
@@ -339,41 +377,3 @@ for img in filenames:
     # waits indefinitely for a key stroke
     k = cv2.waitKey(0) & 0xFF
     cv2.destroyAllWindows()
-
-'''
-# Get bounding boxes with predicted digit in live video capture
-def video_capture():
-
-    cap = cv2.VideoCapture(0)
-
-    while(True):
-
-        ret, img = cap.read() 
-
-        gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        
-        canny_img = get_canny_edges(gray_img)
-        
-        img_with_canny_edges = get_orig_image_with_canny_edges(img, canny_img)
-
-        cv2.imshow('orig',img)
-        cv2.imshow('gray scale',gray_img)
-        cv2.imshow('Canny edges',canny_img)
-        cv2.imshow('orig with edges', img_with_canny_edges)
-        
-        contours = find_contours(canny_img)
-        
-        img_with_roi_bounding_box = get_bounding_box_image(img, contours)
-        
-        cv2.imshow("orig with ROI box", img_with_roi_bounding_box)
-
-        # press q to quit
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-     
-    cap.release()
-    cv2.destroyAllWindows()
-
-# Main
-video_capture()
-'''
