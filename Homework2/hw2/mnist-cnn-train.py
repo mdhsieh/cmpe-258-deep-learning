@@ -27,10 +27,43 @@ model.add(layers.Dense(10, activation='softmax'))
 
 
 
-# Try own images instead of mnist
+# Try own images from custom dataset instead of mnist
 from tensorflow.keras.utils import to_categorical
 
-(train_images, train_labels), (test_images, test_labels) = mnist.load_data()
+import cv2
+import glob
+import pandas as pd 
+
+# Get images from matching string and place in list
+# glob_string: Path with * image extension
+# returns: List of images
+def get_image_list(glob_string):
+    filenames = [img for img in glob.glob(glob_string)]
+
+    filenames.sort()
+
+    images = []
+    for img in filenames:
+        n= cv2.imread(img)
+        images.append(n)
+        print(img)
+    return images
+    
+# path: Path to CSV file
+# column_name: Name of column which has labels
+# returns list of labels
+def get_labels_list(path, column_name):
+    df = pd.read_csv(path, index_col=False)
+    saved_column_as_list = df[column_name].tolist()
+    print(saved_column_as_list)
+    return saved_column_as_list
+    
+train_images = get_image_list("custom-dataset/train-images/*.png")
+test_images = get_image_list("custom-dataset/test-images/*.png")
+train_labels = get_labels_list("custom-dataset/train-labels.csv", "train_label")
+test_labels = get_labels_list("custom-dataset/test-labels.csv", "test_label")
+
+   
 from matplotlib import pyplot
 
 for i in range(9):
