@@ -39,6 +39,9 @@
 * Get all images in directory
 * https://stackoverflow.com/questions/38675389/python-opencv-how-to-load-all-images-from-folder-in-alphabetical-order
 *
+* Larger CNN
+* https://machinelearningmastery.com/handwritten-digit-recognition-using-convolutional-neural-networks-python-keras/
+*
 * Notes:
 * 1. Uses tf.keras included in Tensorflow 2.0 instead of separate Keras installation.
 * 2. Need h5 file harryTest.h5 which has CNN trained on MNIST dataset.

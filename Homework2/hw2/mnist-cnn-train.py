@@ -67,7 +67,7 @@ model.save('harryTest.h5')
 #-end 
 '''
 
-# Try different model architecture
+# Try larger CNN with dropout and more fully connected layers.
 import tensorflow
 
 #--------------build convnet--------------------*
