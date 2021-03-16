@@ -44,7 +44,7 @@
 *
 * Notes:
 * 1. Uses tf.keras included in Tensorflow 2.0 instead of separate Keras installation.
-* 2. Need h5 file harryTest.h5 which has CNN trained on MNIST dataset.
+* 2. Need h5 file custom-mnist-cnn-v2.h5 which has CNN trained on MNIST dataset.
 * 3. Loads and deploys the CNN.             
 ********************************************************************
 '''
@@ -71,6 +71,8 @@ def reshape_image(img):
 
 # load model
 # model = load_model('harryTest.h5')
+# Try larger CNN with dropout and more fully connected layers.
+# model = load_model('custom-mnist-cnn.h5')
 model = load_model('custom-mnist-cnn-v2.h5')
 model.compile(optimizer='rmsprop',
                 loss='categorical_crossentropy',
