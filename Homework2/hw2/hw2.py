@@ -36,6 +36,9 @@
 * Place image in center of another
 * https://stackoverflow.com/questions/58248121/opencv-python-how-to-overlay-an-image-into-the-centre-of-another-image
 *
+* Get all images in directory
+* https://stackoverflow.com/questions/38675389/python-opencv-how-to-load-all-images-from-folder-in-alphabetical-order
+*
 * Notes:
 * 1. Uses tf.keras included in Tensorflow 2.0 instead of separate Keras installation.
 * 2. Need h5 file harryTest.h5 which has CNN trained on MNIST dataset.
@@ -104,21 +107,24 @@ def find_contours(edges):
 # returns: Square 28x28 image keeping ROI image's aspect ratio.
 def get_resized_image(image):
     height, width, channels = image.shape
-    # Create a black background square image with 
+    # Create a background square image with 
     # size being the max dimension of ROI image
     maxDim = max(height, width)
-    black_img = np.zeros((maxDim, maxDim, 3), dtype = "uint8")
-    bg_height, bg_width, channels = black_img.shape
+    # black bg
+    bg_img = np.zeros((maxDim, maxDim, 3), dtype = "uint8")
+    # white bg
+    # bg_img = 255 * np.ones((maxDim, maxDim, 3), dtype = "uint8")
+    bg_height, bg_width, channels = bg_img.shape
     
-    # Use the ROI and black images' height and width
-    # to place ROI image in center of black image.
+    # Use the ROI and background images' height and width
+    # to place ROI image in center of background image.
     
     # compute xoff and yoff for placement of upper left corner of resized image   
     yoff = round((bg_height-height)/2)
     xoff = round((bg_width-width)/2)
 
     # use numpy indexing to place the resized image in the center of background image
-    result = black_img.copy()
+    result = bg_img.copy()
     result[yoff:yoff+height, xoff:xoff+width] = image
     
     # Resize the image to 28x28 pixels
@@ -200,7 +206,7 @@ def video_capture():
     cv2.destroyAllWindows()
 
 # Main
-video_capture()
+# video_capture()
 
 
 # Comment out main  video_capture() function and uncomment this block to 
@@ -208,7 +214,6 @@ video_capture()
 # save the ROIs and resized ROIs from each image frame, and then
 # display each frame with labeled bounding boxes.
 # Current folders have frames and ROIs from sample_input_video.avi
-'''
 # load and prepare the image
 def load_image(filename):
     # load the image
@@ -311,7 +316,7 @@ def get_bounding_box_image(image, contours, frame_num):
             # predict the digit
             y_pred = model.predict_classes(imgToArr)
             digit = y_pred[0]
-            print(digit)
+            # print(digit)
             
             ROI_number += 1
             
@@ -326,6 +331,8 @@ import os
 # sort filenames
 import glob
 
+# Uncomment to capture a video, save it, then save new image frames from it.
+# This will overwrite any existing frames and ROI images.
 # video downloaded from capture saved as image frames, then image frames processed
 # VIDEO_NAME = "sample_input_video.avi"
 # capture_video(VIDEO_NAME) 
@@ -369,4 +376,3 @@ for img in filenames:
     # waits indefinitely for a key stroke
     k = cv2.waitKey(0) & 0xFF
     cv2.destroyAllWindows()
-'''
