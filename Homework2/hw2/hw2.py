@@ -71,7 +71,7 @@ def reshape_image(img):
 
 # load model
 # model = load_model('harryTest.h5')
-model = load_model('custom-mnist-cnn.h5')
+model = load_model('custom-mnist-cnn-v2.h5')
 model.compile(optimizer='rmsprop',
                 loss='categorical_crossentropy',
                 metrics=['accuracy'])
@@ -210,9 +210,9 @@ def video_capture():
     cv2.destroyAllWindows()
 
 # Main
-# video_capture()
+video_capture()
 
-
+'''
 # Comment out main  video_capture() function and uncomment this block to 
 # save an input video as image frames,
 # save the ROIs and resized ROIs from each image frame, and then
@@ -380,3 +380,4 @@ for img in filenames:
     # waits indefinitely for a key stroke
     k = cv2.waitKey(0) & 0xFF
     cv2.destroyAllWindows()
+'''
