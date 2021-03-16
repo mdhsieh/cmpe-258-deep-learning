@@ -25,6 +25,23 @@ model.add(layers.Flatten())
 model.add(layers.Dense(64, activation='relu'))
 model.add(layers.Dense(10, activation='softmax'))
 
+
+
+# Try own images instead of mnist
+from tensorflow.keras.utils import to_categorical
+
+(train_images, train_labels), (test_images, test_labels) = mnist.load_data()
+from matplotlib import pyplot
+
+for i in range(9):
+    pyplot.subplot(330 + 1 + i)
+    pyplot.imshow(train_images[i], cmap=pyplot.get_cmap("gray"))
+    print(train_labels[i])
+pyplot.show()
+
+
+
+'''
 #-----------get NIST image data-------------------*
 from tensorflow.keras.datasets import mnist
 from tensorflow.keras.utils import to_categorical
@@ -63,5 +80,5 @@ test_acc
 import h5py 
 model.save('harryTest.h5')
 #-end 
-
+'''
 
