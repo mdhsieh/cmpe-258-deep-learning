@@ -67,7 +67,8 @@ def reshape_image(img):
     return img
 
 # load model
-model = load_model('harryTest.h5')
+# model = load_model('harryTest.h5')
+model = load_model('custom-mnist-cnn.h5')
 model.compile(optimizer='rmsprop',
                 loss='categorical_crossentropy',
                 metrics=['accuracy'])
