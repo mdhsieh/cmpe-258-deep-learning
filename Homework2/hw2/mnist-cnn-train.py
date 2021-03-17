@@ -67,6 +67,7 @@ model.save('harryTest.h5')
 #-end 
 '''
 
+
 # Try larger CNN with dropout and more fully connected layers.
 import tensorflow
 
@@ -128,33 +129,67 @@ import h5py
 model.save('custom-mnist-cnn.h5')
 #-end 
 
+
 '''
 # Try own images from custom dataset instead of mnist
 import tensorflow
 
+#--------------build convnet--------------------*
 from tensorflow.keras import layers
 from tensorflow.keras import models
 
 model = models.Sequential()
-model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(28, 28, 1)))
+model.add(layers.Conv2D(30, (5, 5), activation='relu', input_shape=(28, 28, 1)))
 model.add(layers.MaxPooling2D((2, 2)))
-model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+model.add(layers.Conv2D(15, (3, 3), activation='relu'))
 model.add(layers.MaxPooling2D((2, 2)))
-model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+model.add(layers.Dropout(0.2))
 
-model.summary()
-
+#-----------flatten then 10-way classifier--------* 
 model.add(layers.Flatten())
-model.add(layers.Dense(64, activation='relu'))
-# change to 5 classes
-model.add(layers.Dense(5, activation='softmax'))
+model.add(layers.Dense(128, activation='relu'))
+model.add(layers.Dense(50, activation='relu'))
+model.add(layers.Dense(10, activation='softmax'))
 
-from tensorflow.keras.utils import to_categorical
+model.summary() #check the model 
 
 import cv2
 import glob
 import numpy as np
 import pandas as pd 
+
+# Given an ROI image, create a new image with its largest dimension, ex.
+# 211px height and 125px width image resized to 211x211 image.
+# Purpose is to preserve aspect ratio.
+# Then resize this image to 28x28. Convert to grayscale.
+# image: ROI image
+# returns: Square 28x28 image keeping ROI image's aspect ratio.
+def get_resized_image(image):
+    height, width, channels = image.shape
+    # Create a background square image with 
+    # size being the max dimension of ROI image
+    maxDim = max(height, width)
+    # black bg
+    bg_img = np.zeros((maxDim, maxDim, 3), dtype = "uint8")
+    bg_height, bg_width, channels = bg_img.shape
+    
+    # Use the ROI and background images' height and width
+    # to place ROI image in center of background image.
+    
+    # compute xoff and yoff for placement of upper left corner of resized image   
+    yoff = round((bg_height-height)/2)
+    xoff = round((bg_width-width)/2)
+
+    # use numpy indexing to place the resized image in the center of background image
+    result = bg_img.copy()
+    result[yoff:yoff+height, xoff:xoff+width] = image
+    
+    # Resize the image to 28x28 pixels
+    result_resized = cv2.resize(result, (28,28))
+    # Convert to grayscale
+    result_resized_gray = cv2.cvtColor(result_resized, cv2.COLOR_BGR2GRAY)
+    
+    return result_resized_gray
 
 # Get images from matching string and place in list
 # glob_string: Path with * image extension
@@ -166,7 +201,6 @@ def get_image_list(glob_string):
 
     images = []
     for img in filenames:
-        # n = cv2.imread(img)
         # Read as grayscale to get 1 channel instead of 3
         n = cv2.imread(img, cv2.IMREAD_GRAYSCALE)
         images.append(n)
@@ -180,10 +214,19 @@ def get_labels_list(path, column_name):
     df = pd.read_csv(path, index_col=False)
     saved_column_as_list = df[column_name].tolist()
     return saved_column_as_list
+   
+from tensorflow.keras.utils import to_categorical
+
+#-----------get NIST image data-------------------*
+from tensorflow.keras.datasets import mnist
+
+(train_images, train_labels), (test_images, test_labels) = mnist.load_data()
     
-train_images = get_image_list("custom-dataset/train-images/*.png")
+# Replace test mnist images with custom dataset test images
+# 30 train images, 21 test images
+# train_images = get_image_list("custom-dataset/train-images/*.png")
 test_images = get_image_list("custom-dataset/test-images/*.png")
-train_labels = get_labels_list("custom-dataset/train-labels.csv", "train_label")
+# train_labels = get_labels_list("custom-dataset/train-labels.csv", "train_label")
 test_labels = get_labels_list("custom-dataset/test-labels.csv", "test_label")
 
 from matplotlib import pyplot
@@ -201,22 +244,20 @@ for i in range(9):
 pyplot.show()
 
 # convert list to numpy array
-train_images = np.array(train_images)
+# train_images = np.array(train_images)
 test_images = np.array(test_images)
 
-print('train_images shape:', train_images.shape)
-print(type(train_images))
+# print('train_images shape:', train_images.shape)
+# print(type(train_images))
 print('test_images shape:', test_images.shape)
 print(type(train_images))
 
-# 30 train images, 9 test images
-train_images = train_images.reshape((30, 28, 28, 1))
+train_images = train_images.reshape((60000, 28, 28, 1))
 train_images = train_images.astype('float32') / 255
 
-test_images = test_images.reshape((9, 28, 28, 1))
+test_images = test_images.reshape((21, 28, 28, 1))
 test_images = test_images.astype('float32') / 255
 
-# 5 classes
 train_labels = to_categorical(train_labels)
 test_labels = to_categorical(test_labels)
 
@@ -224,12 +265,12 @@ test_labels = to_categorical(test_labels)
 model.compile(optimizer='rmsprop',
               loss='categorical_crossentropy',
               metrics=['accuracy'])
-model.fit(train_images, train_labels, epochs=5, batch_size=3)
+model.fit(train_images, train_labels, epochs=5, batch_size=200)
 
 test_loss, test_acc = model.evaluate(test_images, test_labels)
 test_acc
 
 # save
 import h5py 
-model.save('custom-mnist-cnn.h5')
+model.save('custom-dataset-trained-mnist-cnn.h5')
 '''
