@@ -144,14 +144,13 @@ def create_image_centered_in_background(img, bg_img):
    
 # Given an ROI image, resize the image to 20x20x1
 # and place it in a 28x28x1 background image.
-# The final ROI image will be resized to 28x28.
+# The final ROI image will be resized to 28x28 pixels.
 # image: ROI image
 # returns: Square 28x28 image.
 def get_resized_image(image):
     # perform dilation to make white digit larger so it is easier to read
     kernel = np.ones((5,5),np.uint8)
     image = cv2.dilate(image,kernel,iterations = 1)
-    
     
     # Keep aspect ratio
     # by creating background image with ROI image's max dimension,
@@ -165,10 +164,7 @@ def get_resized_image(image):
     # place ROI image in center of background image
     keep_aspect_img = create_image_centered_in_background(image, bg_image)
     
-    
-    
     # resize image to 20x20x1
-    # image = cv2.resize(image, (20,20), interpolation = cv2.INTER_AREA)
     image = cv2.resize(keep_aspect_img, (20,20), interpolation = cv2.INTER_AREA)
     image = image.reshape(20, 20, 1)
     
@@ -276,7 +272,7 @@ def video_capture():
     cv2.destroyAllWindows()
 
 # Main
-# video_capture()
+video_capture()
 
 
 # Comment out main  video_capture() function and uncomment this block to 
@@ -284,7 +280,7 @@ def video_capture():
 # save the ROIs and resized ROIs from each image frame, and then
 # display each frame with labeled bounding boxes.
 # Current folders have frames and ROIs from sample_input_video.avi
-
+'''
 # Capture live video, then save the video with given name.
 # Using .avi extension
 # output_video_name: Name of the video saved from capture
@@ -382,3 +378,4 @@ for img in filenames:
     # waits indefinitely for a key stroke
     k = cv2.waitKey(0) & 0xFF
     cv2.destroyAllWindows()
+'''
