@@ -194,7 +194,6 @@ def get_bounding_box_image(image, contours, orig_image, frame_num = None, save_r
     MIN_AREA = 50
     
     ROI_number = 0
-    # copy = image.copy()
     copy = orig_image.copy()
     for c in contours:
         if cv2.contourArea(c) > MIN_AREA:
