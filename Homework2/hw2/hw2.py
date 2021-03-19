@@ -79,13 +79,8 @@ def reshape_image(img):
     return img
 
 # load model
-# model = load_model('harryTest.h5')
 # Try larger CNN with dropout and more fully connected layers.
-# model = load_model('custom-mnist-cnn.h5')
-# Retrained larger CNN
 model = load_model('custom-mnist-cnn-v2.h5')
-# CNN tested with custom dataset
-# model = load_model('custom-dataset-trained-mnist-cnn.h5')
 model.compile(optimizer='rmsprop',
                 loss='categorical_crossentropy',
                 metrics=['accuracy'])
