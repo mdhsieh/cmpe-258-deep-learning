@@ -2,9 +2,71 @@
 # program : mnist-cnn-train.py;          
 # date    : Mar 4, 2021                                  
 # ref: https://github.com/hualili/opencv/blob/master/deep-learning-2020S/20-2021S-0-7-1convnets-NumeralDet-saveTrained.py
-#                                                          
+# https://machinelearningmastery.com/handwritten-digit-recognition-using-convolutional-neural-networks-python-keras/            
+#                                              
 # purpose : demo of saving trained mnist net               
 #----------------------------------------------------------
+
+# Try larger CNN with dropout and more fully connected layers.
+import tensorflow
+
+#--------------build convnet--------------------*
+from tensorflow.keras import layers
+from tensorflow.keras import models
+
+model = models.Sequential()
+model.add(layers.Conv2D(30, (5, 5), activation='relu', input_shape=(28, 28, 1)))
+model.add(layers.MaxPooling2D((2, 2)))
+model.add(layers.Conv2D(15, (3, 3), activation='relu'))
+model.add(layers.MaxPooling2D((2, 2)))
+model.add(layers.Dropout(0.2))
+
+#-----------flatten then 10-way classifier--------* 
+model.add(layers.Flatten())
+model.add(layers.Dense(128, activation='relu'))
+model.add(layers.Dense(50, activation='relu'))
+model.add(layers.Dense(10, activation='softmax'))
+
+model.summary() #check the model 
+
+#-----------get NIST image data-------------------*
+from tensorflow.keras.datasets import mnist
+from tensorflow.keras.utils import to_categorical
+
+(train_images, train_labels), (test_images, test_labels) = mnist.load_data()
+
+
+#-------------show first 9 images---------* 
+from matplotlib import pyplot
+
+for i in range(9):
+    pyplot.subplot(330 + 1 + i)
+    pyplot.imshow(train_images[i], cmap=pyplot.get_cmap("gray"))
+pyplot.show()
+
+
+train_images = train_images.reshape((60000, 28, 28, 1))
+train_images = train_images.astype('float32') / 255
+
+test_images = test_images.reshape((10000, 28, 28, 1))
+test_images = test_images.astype('float32') / 255
+
+train_labels = to_categorical(train_labels)
+test_labels = to_categorical(test_labels)
+
+#-------------train----------------------*
+model.compile(optimizer='rmsprop',
+              loss='categorical_crossentropy',
+              metrics=['accuracy'])
+model.fit(train_images, train_labels, epochs=10, batch_size=200)
+
+test_loss, test_acc = model.evaluate(test_images, test_labels)
+test_acc
+
+#-------------save trained model---------* 
+import h5py 
+model.save('custom-mnist-cnn-v2.h5')
+#-end 
 
 '''
 import tensorflow
@@ -66,69 +128,6 @@ import h5py
 model.save('harryTest.h5')
 #-end 
 '''
-
-
-# Try larger CNN with dropout and more fully connected layers.
-import tensorflow
-
-#--------------build convnet--------------------*
-from tensorflow.keras import layers
-from tensorflow.keras import models
-
-model = models.Sequential()
-model.add(layers.Conv2D(30, (5, 5), activation='relu', input_shape=(28, 28, 1)))
-model.add(layers.MaxPooling2D((2, 2)))
-model.add(layers.Conv2D(15, (3, 3), activation='relu'))
-model.add(layers.MaxPooling2D((2, 2)))
-model.add(layers.Dropout(0.2))
-
-#-----------flatten then 10-way classifier--------* 
-model.add(layers.Flatten())
-model.add(layers.Dense(128, activation='relu'))
-model.add(layers.Dense(50, activation='relu'))
-model.add(layers.Dense(10, activation='softmax'))
-
-model.summary() #check the model 
-
-#-----------get NIST image data-------------------*
-from tensorflow.keras.datasets import mnist
-from tensorflow.keras.utils import to_categorical
-
-(train_images, train_labels), (test_images, test_labels) = mnist.load_data()
-
-
-#-------------show first 9 images---------* 
-from matplotlib import pyplot
-
-for i in range(9):
-    pyplot.subplot(330 + 1 + i)
-    pyplot.imshow(train_images[i], cmap=pyplot.get_cmap("gray"))
-pyplot.show()
-
-
-train_images = train_images.reshape((60000, 28, 28, 1))
-train_images = train_images.astype('float32') / 255
-
-test_images = test_images.reshape((10000, 28, 28, 1))
-test_images = test_images.astype('float32') / 255
-
-train_labels = to_categorical(train_labels)
-test_labels = to_categorical(test_labels)
-
-#-------------train----------------------*
-model.compile(optimizer='rmsprop',
-              loss='categorical_crossentropy',
-              metrics=['accuracy'])
-model.fit(train_images, train_labels, epochs=10, batch_size=200)
-
-test_loss, test_acc = model.evaluate(test_images, test_labels)
-test_acc
-
-#-------------save trained model---------* 
-import h5py 
-model.save('custom-mnist-cnn.h5')
-#-end 
-
 
 '''
 # Try own images from custom dataset instead of mnist
