@@ -142,58 +142,12 @@ def create_image_centered_in_background(img, bg_img):
     result[yoff:yoff+height, xoff:xoff+width] = img
     return result
    
-# Given an ROI image, create a new image with its largest dimension, ex.
-# 211px height and 125px width image resized to 211x211 image.
-# Purpose is to preserve aspect ratio.
-# Then resize this image to 28x28.
+# Given an ROI image, resize the image to 20x20x1
+# and place it in a 28x28x1 background image.
+# The final ROI image will be resized to 28x28.
 # image: ROI image
-# returns: Square 28x28 image keeping ROI image's aspect ratio.
+# returns: Square 28x28 image.
 def get_resized_image(image):
-    '''
-    # New working version with Canny black and white image
-    # perform dilation to make white digit larger so it is easier to read
-    kernel = np.ones((5,5),np.uint8)
-    image = cv2.dilate(image,kernel,iterations = 1)
-    
-    # resize image to 20x20x1
-    image = cv2.resize(image, (20,20), interpolation = cv2.INTER_AREA)
-    height, width = image.shape
-    image = image.reshape(20, 20, 1)
-    cv2.imshow("preprocessed image at 20px", image)
-    # Press any key to close windows
-    # waits indefinitely for a key stroke
-    k = cv2.waitKey(0) & 0xFF
-    cv2.destroyAllWindows()
-    
-    # add padding to background image
-    PADDING = 8
-    # Create a background square image with 
-    # size being the max dimension of ROI image
-    maxDim = max(height, width)
-    # black bg
-    bg_img = np.zeros((maxDim + PADDING, maxDim + PADDING, 1), dtype = "uint8")
-    bg_height, bg_width, channels = bg_img.shape
-    
-    # Use the ROI and background images' height and width
-    # to place ROI image in center of background image.
-    
-    # compute xoff and yoff for placement of upper left corner of resized image   
-    yoff = round((bg_height-height)/2)
-    xoff = round((bg_width-width)/2)
-
-    # use numpy indexing to place the resized image in the center of background image
-    result = bg_img.copy()
-    result[yoff:yoff+height, xoff:xoff+width] = image
-
-    # Resize the image to 28x28 pixels
-    # result_resized = cv2.resize(result, (28,28))
-    # result_resized = cv2.resize(result, (28,28), interpolation = cv2.INTER_AREA)
-    
-    # print(result_resized.shape)
-    # return result_resized
-    return result
-    '''
-    
     # perform dilation to make white digit larger so it is easier to read
     kernel = np.ones((5,5),np.uint8)
     image = cv2.dilate(image,kernel,iterations = 1)
@@ -212,44 +166,65 @@ def get_resized_image(image):
 
     return result
     
-    
 # Get bounding box from contour, then get 
 # Region Of Interest (ROI) image from bounding box. 
 # Resize the ROI image and predict digit.
 # Then draw bounding box with predicted digit labeled on it.
-# image: Original image frame
+# image: Image to get ROI image from
 # contours: countours found from Canny edge image 
+# orig_image: Original image frame
+# frame_num: Image frame number, used to create filenames of frame's ROIs.
+# Default no frame number.
+# save_rois: Whether to save ROI and resized ROI images in folders or not
+# Default don't save.
 # returns: Copy of original image with bounding box
-def get_bounding_box_image(image, contours):
+def get_bounding_box_image(image, contours, orig_image, frame_num = None, save_rois = False):
+    
+    ROI_FOLDER = "rois/"
+    RESIZED_ROI_FOLDER = "rois-resized/"
     
     # Set a minimum area so unecessary contours are eliminated
     MIN_AREA = 50
     
     ROI_number = 0
-    copy = image.copy()
+    # copy = image.copy()
+    copy = orig_image.copy()
     for c in contours:
         if cv2.contourArea(c) > MIN_AREA:
             x,y,w,h = cv2.boundingRect(c)
             
             ROI = image[y:y+h, x:x+w]
+            if save_rois:
+                # Save ROI image
+                roi_path = ROI_FOLDER + frame_num + "_" + "ROI_{}.png".format(ROI_number)
+                cv2.imwrite(roi_path, ROI)
+                print("saved " + roi_path)
             
             # resize image
             resized_img = get_resized_image(ROI)
+            if save_rois:
+                # Save resized ROI image
+                resized_roi_path = RESIZED_ROI_FOLDER + frame_num + "_" + "resized_ROI_{}.png".format(ROI_number)
+                cv2.imwrite(resized_roi_path, resized_img)
+                print("saved " + resized_roi_path)
             
             # Use the resized ROI image to predict the digit inside ROI.
             
-            imgToArr = reshape_image(resized_img)
-            
+            # load the image
+            imgToArr = reshape_image(resized_img) 
+                        
             # predict the digit
             y_pred = model.predict_classes(imgToArr)
             digit = y_pred[0]
             
+            # Increase saved ROI number by 1
             ROI_number += 1
             
             copy = cv2.rectangle(copy,(x,y),(x+w,y+h),(36,255,12),2)
             # label rectangle with predicted digit caption text
             cv2.putText(copy, str(digit), (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 2.5, (36,255,12), 2)
     return copy
+
 
 # Get bounding boxes with predicted digit in live video capture
 def video_capture():
@@ -273,7 +248,7 @@ def video_capture():
         
         contours = find_contours(canny_img)
         
-        img_with_roi_bounding_box = get_bounding_box_image(img, contours)
+        img_with_roi_bounding_box = get_bounding_box_image(canny_img, contours, img)
         
         cv2.imshow("orig with ROI box", img_with_roi_bounding_box)
 
@@ -285,7 +260,7 @@ def video_capture():
     cv2.destroyAllWindows()
 
 # Main
-# video_capture()
+video_capture()
 
 
 # Comment out main  video_capture() function and uncomment this block to 
@@ -293,7 +268,7 @@ def video_capture():
 # save the ROIs and resized ROIs from each image frame, and then
 # display each frame with labeled bounding boxes.
 # Current folders have frames and ROIs from sample_input_video.avi
-
+'''
 # Capture live video, then save the video with given name.
 # Using .avi extension
 # output_video_name: Name of the video saved from capture
@@ -332,7 +307,6 @@ def save_image_frames(input_video_name):
     while success:
       # save 1 frame per second
       cap.set(cv2.CAP_PROP_POS_MSEC,(count*1000))
-      # filename = "frames/frame%d.jpg" % count
       # num is 4 characters long with leading 0
       filename = "frames/frame%s.jpg" % str(count).zfill(4)
       # save frame as JPEG file      
@@ -340,58 +314,6 @@ def save_image_frames(input_video_name):
       success, frame = cap.read()
       print('Read a new frame: ', success)
       count += 1    
-
-# Get bounding box from contour, then get 
-# Region Of Interest (ROI) image from bounding box. 
-# Resize the ROI image and predict digit.
-# Then draw bounding box with predicted digit labeled on it.
-# image: Image to get ROI image from
-# contours: countours found from Canny edge image 
-# frame_num: Image frame number, 
-# used to create filenames of frame's ROIs
-# orig_image: Original image frame
-# returns: Copy of original image with bounding box
-def get_bounding_box_image(image, contours, frame_num, orig_image):
-    
-    ROI_FOLDER = "rois/"
-    RESIZED_ROI_FOLDER = "rois-resized/"
-    
-    # Set a minimum area so unecessary contours are eliminated
-    MIN_AREA = 50
-    
-    ROI_number = 0
-    # copy = image.copy()
-    copy = orig_image.copy()
-    for c in contours:
-        if cv2.contourArea(c) > MIN_AREA:
-            x,y,w,h = cv2.boundingRect(c)
-            
-            ROI = image[y:y+h, x:x+w]
-            # Save ROI image
-            roi_path = ROI_FOLDER + frame_num + "_" + "ROI_{}.png".format(ROI_number)
-            cv2.imwrite(roi_path, ROI)
-            
-            # resize image
-            resized_img = get_resized_image(ROI)
-            # Save resized ROI image
-            resized_roi_path = RESIZED_ROI_FOLDER + frame_num + "_" + "resized_ROI_{}.png".format(ROI_number)
-            cv2.imwrite(resized_roi_path, resized_img)
-            
-            # Use the resized ROI image to predict the digit inside ROI.
-            
-            # load the image
-            imgToArr = reshape_image(resized_img) 
-                        
-            # predict the digit
-            y_pred = model.predict_classes(imgToArr)
-            digit = y_pred[0]
-            
-            ROI_number += 1
-            
-            copy = cv2.rectangle(copy,(x,y),(x+w,y+h),(36,255,12),2)
-            # label rectangle with predicted digit caption text
-            cv2.putText(copy, str(digit), (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 2.5, (36,255,12), 2)
-    return copy
 
 # get image frame number
 import os
@@ -438,10 +360,10 @@ for img in filenames:
     # Find and draw contours using Canny edges image
     contours = find_contours(canny_img)
     # Get ROI image, predict digit, and draw original bounding box with labeled prediction.
-    # img_with_roi_bounding_box = get_bounding_box_image(img, contours, FRAME_NUM)
-    img_with_roi_bounding_box = get_bounding_box_image(canny_img, contours, FRAME_NUM, img)
+    img_with_roi_bounding_box = get_bounding_box_image(canny_img, contours, img, FRAME_NUM, True)
     cv2.imshow("orig with ROI box", img_with_roi_bounding_box)
     # Press any key to close windows
     # waits indefinitely for a key stroke
     k = cv2.waitKey(0) & 0xFF
     cv2.destroyAllWindows()
+'''
