@@ -62,6 +62,19 @@ from tensorflow.keras.models import load_model
 # Reshape image array into format that model needs to make prediction
 # img: Image array
 def reshape_image(img):
+    '''
+    # reshape into a single sample with 1 channel
+    img = img.reshape(1, 28, 28, 1)
+    # prepare pixel data
+    img = img.astype('float32')
+    img = img / 255.0
+    return img
+    '''
+    
+    # OpenCV imread reads image in BGR format but keras reads in RGB as PIL image
+    # reverse channels to get RGB
+    img = img[...,::-1]
+    
     # reshape into a single sample with 1 channel
     img = img.reshape(1, 28, 28, 1)
     # prepare pixel data
@@ -115,6 +128,7 @@ def find_contours(edges):
 # image: ROI image
 # returns: Square 28x28 image keeping ROI image's aspect ratio.
 def get_resized_image(image):
+    '''
     height, width, channels = image.shape
     # Create a background square image with 
     # size being the max dimension of ROI image
@@ -137,11 +151,64 @@ def get_resized_image(image):
     result[yoff:yoff+height, xoff:xoff+width] = image
     
     # Resize the image to 28x28 pixels
-    result_resized = cv2.resize(result, (28,28))
+    # result_resized = cv2.resize(result, (28,28))
+    result_resized = cv2.resize(result, (28,28), interpolation = cv2.INTER_AREA)
+    
     # Convert to grayscale
     result_resized_gray = cv2.cvtColor(result_resized, cv2.COLOR_BGR2GRAY)
     
     return result_resized_gray
+    '''
+    
+    # perform dilation to make white digit larger so it is easier to read
+    kernel = np.ones((5,5),np.uint8)
+    image = cv2.dilate(image,kernel,iterations = 1)
+    # cv2.imshow("preprocessed image prior to resizing", image)
+    # Press any key to close windows
+    # waits indefinitely for a key stroke
+    # k = cv2.waitKey(0) & 0xFF
+    # cv2.destroyAllWindows()
+    # height, width = image.shape
+    # image = image.reshape(height, width, 1)
+    
+    # resize image to 20x20x1
+    image = cv2.resize(image, (20,20), interpolation = cv2.INTER_AREA)
+    height, width = image.shape
+    image = image.reshape(20, 20, 1)
+    cv2.imshow("preprocessed image at 20px", image)
+    # Press any key to close windows
+    # waits indefinitely for a key stroke
+    k = cv2.waitKey(0) & 0xFF
+    cv2.destroyAllWindows()
+    
+    # add padding to background image
+    PADDING = 8
+    # Create a background square image with 
+    # size being the max dimension of ROI image
+    maxDim = max(height, width)
+    # black bg
+    bg_img = np.zeros((maxDim + PADDING, maxDim + PADDING, 1), dtype = "uint8")
+    bg_height, bg_width, channels = bg_img.shape
+    
+    # Use the ROI and background images' height and width
+    # to place ROI image in center of background image.
+    
+    # compute xoff and yoff for placement of upper left corner of resized image   
+    yoff = round((bg_height-height)/2)
+    xoff = round((bg_width-width)/2)
+
+    # use numpy indexing to place the resized image in the center of background image
+    result = bg_img.copy()
+    result[yoff:yoff+height, xoff:xoff+width] = image
+
+    # Resize the image to 28x28 pixels
+    # result_resized = cv2.resize(result, (28,28))
+    # result_resized = cv2.resize(result, (28,28), interpolation = cv2.INTER_AREA)
+    
+    # print(result_resized.shape)
+    # return result_resized
+    return result
+    
     
 # Get bounding box from contour, then get 
 # Region Of Interest (ROI) image from bounding box. 
@@ -215,14 +282,15 @@ def video_capture():
     cv2.destroyAllWindows()
 
 # Main
-video_capture()
+# video_capture()
 
-'''
+
 # Comment out main  video_capture() function and uncomment this block to 
 # save an input video as image frames,
 # save the ROIs and resized ROIs from each image frame, and then
 # display each frame with labeled bounding boxes.
 # Current folders have frames and ROIs from sample_input_video.avi
+'''
 # load and prepare the image
 def load_image(filename):
     # load the image
@@ -235,6 +303,7 @@ def load_image(filename):
     img = img.astype('float32')
     img = img / 255.0
     return img
+'''
 
 # Capture live video, then save the video with given name.
 # Using .avi extension
@@ -287,12 +356,13 @@ def save_image_frames(input_video_name):
 # Region Of Interest (ROI) image from bounding box. 
 # Resize the ROI image and predict digit.
 # Then draw bounding box with predicted digit labeled on it.
-# image: Original image frame
+# image: Image to get ROI image from
 # contours: countours found from Canny edge image 
 # frame_num: Image frame number, 
-# used to create a folder with same name that has the frame's ROIs
+# used to create filenames of frame's ROIs
+# orig_image: Original image frame
 # returns: Copy of original image with bounding box
-def get_bounding_box_image(image, contours, frame_num):
+def get_bounding_box_image(image, contours, frame_num, orig_image):
     
     ROI_FOLDER = "rois/"
     RESIZED_ROI_FOLDER = "rois-resized/"
@@ -301,7 +371,8 @@ def get_bounding_box_image(image, contours, frame_num):
     MIN_AREA = 50
     
     ROI_number = 0
-    copy = image.copy()
+    # copy = image.copy()
+    copy = orig_image.copy()
     for c in contours:
         if cv2.contourArea(c) > MIN_AREA:
             x,y,w,h = cv2.boundingRect(c)
@@ -320,7 +391,8 @@ def get_bounding_box_image(image, contours, frame_num):
             # Use the resized ROI image to predict the digit inside ROI.
             
             # load the image
-            imgToArr = load_image(resized_roi_path) 
+            # imgToArr = load_image(resized_roi_path) 
+            imgToArr = reshape_image(resized_img) 
                         
             # predict the digit
             y_pred = model.predict_classes(imgToArr)
@@ -379,10 +451,10 @@ for img in filenames:
     # Find and draw contours using Canny edges image
     contours = find_contours(canny_img)
     # Get ROI image, predict digit, and draw original bounding box with labeled prediction.
-    img_with_roi_bounding_box = get_bounding_box_image(img, contours, FRAME_NUM)
+    # img_with_roi_bounding_box = get_bounding_box_image(img, contours, FRAME_NUM)
+    img_with_roi_bounding_box = get_bounding_box_image(canny_img, contours, FRAME_NUM, img)
     cv2.imshow("orig with ROI box", img_with_roi_bounding_box)
     # Press any key to close windows
     # waits indefinitely for a key stroke
     k = cv2.waitKey(0) & 0xFF
     cv2.destroyAllWindows()
-'''
