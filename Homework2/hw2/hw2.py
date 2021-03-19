@@ -177,7 +177,7 @@ def get_resized_image(image):
 # Region Of Interest (ROI) image from bounding box. 
 # Resize the ROI image and predict digit.
 # Then draw bounding box with predicted digit labeled on it.
-# image: Image to get ROI image from
+# image: Canny edge image to get ROI image from
 # contours: countours found from Canny edge image 
 # orig_image: Original image frame
 # frame_num: Image frame number, used to create filenames of frame's ROIs.
