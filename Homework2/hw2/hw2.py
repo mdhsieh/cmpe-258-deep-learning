@@ -42,6 +42,11 @@
 * Larger CNN
 * https://machinelearningmastery.com/handwritten-digit-recognition-using-convolutional-neural-networks-python-keras/
 *
+* opencv morphological operations
+* https://docs.opencv.org/master/d9/d61/tutorial_py_morphological_ops.html
+* mnist sample image
+* https://medium.com/@o.kroeger/tensorflow-mnist-and-your-own-handwritten-digits-4d1cd32bbab4
+*
 * Notes:
 * 1. Uses tf.keras included in Tensorflow 2.0 instead of separate Keras installation.
 * 2. Need h5 file custom-mnist-cnn-v2.h5 which has CNN trained on MNIST dataset.
@@ -62,15 +67,6 @@ from tensorflow.keras.models import load_model
 # Reshape image array into format that model needs to make prediction
 # img: Image array
 def reshape_image(img):
-    '''
-    # reshape into a single sample with 1 channel
-    img = img.reshape(1, 28, 28, 1)
-    # prepare pixel data
-    img = img.astype('float32')
-    img = img / 255.0
-    return img
-    '''
-    
     # OpenCV imread reads image in BGR format but keras reads in RGB as PIL image
     # reverse channels to get RGB
     img = img[...,::-1]
@@ -120,56 +116,44 @@ def find_contours(edges):
     contours, hierarchy = cv2.findContours(edges_copy,  
         cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     return contours
-    
-# Given an ROI image, create a new image with its largest dimension, ex.
-# 211px height and 125px width image resized to 211x211 image.
-# Purpose is to preserve aspect ratio.
-# Then resize this image to 28x28. Convert to grayscale.
-# image: ROI image
-# returns: Square 28x28 image keeping ROI image's aspect ratio.
-def get_resized_image(image):
-    '''
-    height, width, channels = image.shape
-    # Create a background square image with 
-    # size being the max dimension of ROI image
-    maxDim = max(height, width)
+   
+# Create black background image.
+# bg_height: Background image height
+# bg_width: Background image width
+# Returns: A background image which has 1 channel, meaning black and white image
+def create_background_image(bg_height, bg_width):
     # black bg
-    bg_img = np.zeros((maxDim, maxDim, 3), dtype = "uint8")
-    # white bg
-    # bg_img = 255 * np.ones((maxDim, maxDim, 3), dtype = "uint8")
+    return np.zeros((bg_height, bg_width, 1), dtype = "uint8")
+    
+# Place an image in center of a background image
+# preconditon: The images have 1 channel, meaning black and white.
+# The background image is larger than the image to be centered.
+# img: The image to place in center
+# bg_img: Background image
+def create_image_centered_in_background(img, bg_img):
+    height, width, channels = img.shape
     bg_height, bg_width, channels = bg_img.shape
-    
-    # Use the ROI and background images' height and width
-    # to place ROI image in center of background image.
-    
     # compute xoff and yoff for placement of upper left corner of resized image   
     yoff = round((bg_height-height)/2)
     xoff = round((bg_width-width)/2)
 
     # use numpy indexing to place the resized image in the center of background image
     result = bg_img.copy()
-    result[yoff:yoff+height, xoff:xoff+width] = image
-    
-    # Resize the image to 28x28 pixels
-    # result_resized = cv2.resize(result, (28,28))
-    result_resized = cv2.resize(result, (28,28), interpolation = cv2.INTER_AREA)
-    
-    # Convert to grayscale
-    result_resized_gray = cv2.cvtColor(result_resized, cv2.COLOR_BGR2GRAY)
-    
-    return result_resized_gray
+    result[yoff:yoff+height, xoff:xoff+width] = img
+    return result
+   
+# Given an ROI image, create a new image with its largest dimension, ex.
+# 211px height and 125px width image resized to 211x211 image.
+# Purpose is to preserve aspect ratio.
+# Then resize this image to 28x28.
+# image: ROI image
+# returns: Square 28x28 image keeping ROI image's aspect ratio.
+def get_resized_image(image):
     '''
-    
+    # New working version with Canny black and white image
     # perform dilation to make white digit larger so it is easier to read
     kernel = np.ones((5,5),np.uint8)
     image = cv2.dilate(image,kernel,iterations = 1)
-    # cv2.imshow("preprocessed image prior to resizing", image)
-    # Press any key to close windows
-    # waits indefinitely for a key stroke
-    # k = cv2.waitKey(0) & 0xFF
-    # cv2.destroyAllWindows()
-    # height, width = image.shape
-    # image = image.reshape(height, width, 1)
     
     # resize image to 20x20x1
     image = cv2.resize(image, (20,20), interpolation = cv2.INTER_AREA)
@@ -207,6 +191,25 @@ def get_resized_image(image):
     
     # print(result_resized.shape)
     # return result_resized
+    return result
+    '''
+    
+    # perform dilation to make white digit larger so it is easier to read
+    kernel = np.ones((5,5),np.uint8)
+    image = cv2.dilate(image,kernel,iterations = 1)
+    
+    # resize image to 20x20x1
+    image = cv2.resize(image, (20,20), interpolation = cv2.INTER_AREA)
+    image = image.reshape(20, 20, 1)
+    
+    # Create a background square image with 
+    # size 28x28, so there are 8 bits of padding between background and digit
+    bg_image = create_background_image(28, 28)
+    
+    # Use the ROI and background images' height and width
+    # to place ROI image in center of background image.
+    result = create_image_centered_in_background(image, bg_image)
+
     return result
     
     
@@ -290,20 +293,6 @@ def video_capture():
 # save the ROIs and resized ROIs from each image frame, and then
 # display each frame with labeled bounding boxes.
 # Current folders have frames and ROIs from sample_input_video.avi
-'''
-# load and prepare the image
-def load_image(filename):
-    # load the image
-    img = load_img(filename, color_mode="grayscale", target_size=(28, 28))
-    # convert to array
-    img = img_to_array(img)
-    # reshape into a single sample with 1 channel
-    img = img.reshape(1, 28, 28, 1)
-    # prepare pixel data
-    img = img.astype('float32')
-    img = img / 255.0
-    return img
-'''
 
 # Capture live video, then save the video with given name.
 # Using .avi extension
@@ -391,13 +380,11 @@ def get_bounding_box_image(image, contours, frame_num, orig_image):
             # Use the resized ROI image to predict the digit inside ROI.
             
             # load the image
-            # imgToArr = load_image(resized_roi_path) 
             imgToArr = reshape_image(resized_img) 
                         
             # predict the digit
             y_pred = model.predict_classes(imgToArr)
             digit = y_pred[0]
-            # print(digit)
             
             ROI_number += 1
             
