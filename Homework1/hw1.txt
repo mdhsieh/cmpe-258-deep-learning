@@ -1,5 +1,0 @@
-4. Homework
-Given the following data set with class C1: (0.3, 0.457), (1.1, 2.37), (4.57, 5.55), and class C2: (0.5, 0.34), (1.45, 1.11), (4.78, 4.44), 
-(1) build a NN with one input layer, one hidden layer, and one output layer, as 2-2-1 feed forward architecture, by drawing the NN architecture block diagram;
-(2) use the python code to train the NN and plot the loss function;
-(3) test your train the NN with the input data (3.32, 3.01), find which class does it belong to. 
