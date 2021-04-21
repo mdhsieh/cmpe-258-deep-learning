@@ -20,7 +20,8 @@ Improve detection speed made to original YOLOv4 repo by reducing number of class
 - New file data/classes/custom.names was created to list reduced number of classes.
 Since this was traffic video listed only person and vehicles classes.
 - Changed core/config.py to use the custom.names file.
-- Then re-ran detection.
+- Then re-ran detection:
+python detect_video.py --weights ./checkpoints/yolov4-416 --size 416 --model yolov4 --video ./data/video/road_traffic.mp4 --output ./detections/results.avi
 - The new detection results are in video/results.avi. Original results are in video/original-results.avi.
 
 ### Instructions
