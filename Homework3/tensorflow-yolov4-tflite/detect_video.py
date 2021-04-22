@@ -1,3 +1,18 @@
+'''
+********************************************************************
+* Program: detect_video.py                                            
+* Coded by: Michael Hsieh                                                      
+* Date: Apr 18 2021
+*                                                                  
+* References: 
+* https://github.com/theAIGuysCode/tensorflow-yolov4-tflite
+* https://github.com/hualili/opencv/blob/master/deep-learning-2020S/20-2021S-7c-%23README-yolo4-v2-yy-hl-2021-4-5%20(copy).txt
+*
+* Notes:
+* 1. Changes are in core/config.py and data/classes/custom.names
+* 2. Runs YOLOv4 on custom video.         
+********************************************************************
+'''
 import time
 import tensorflow as tf
 physical_devices = tf.config.experimental.list_physical_devices('GPU')
@@ -69,6 +84,8 @@ def main(_argv):
             image = Image.fromarray(frame)
         else:
             print('Video has ended or failed, try a different video format!')
+            # print time to run detect video script, in seconds
+            print("--- %s seconds ---" % (time.time() - video_detection_start_time))
             break
     
         frame_size = frame.shape[:2]
@@ -121,6 +138,7 @@ def main(_argv):
 
 if __name__ == '__main__':
     try:
+        video_detection_start_time = time.time()
         app.run(main)
     except SystemExit:
         pass

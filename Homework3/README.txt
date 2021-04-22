@@ -1,27 +1,20 @@
-'''
-********************************************************************
-* Program: detect_video.py                                            
-* Coded by: Michael Hsieh                                                      
-* Date: Apr 18 2021
-*                                                                  
-* References: 
-* https://github.com/theAIGuysCode/tensorflow-yolov4-tflite
-* https://github.com/hualili/opencv/blob/master/deep-learning-2020S/20-2021S-7c-%23README-yolo4-v2-yy-hl-2021-4-5%20(copy).txt
-*
-* Notes:
-* 1. Changes are in core/config.py and data/classes/custom.names
-* 2. Runs YOLOv4 on custom video.         
-********************************************************************
-'''
-
 ### Changes
 Improve detection speed made to original YOLOv4 repo by reducing number of classes.
+#### Set up YOLOv4 and measured original detection speed
 - Custom video being detected was data/video/road_traffic.mp4
+- Program info is in detect_video.py
+- In detect_video.py, ran video detection script: 
+python detect_video.py --weights ./checkpoints/yolov4-416 --size 416 --model yolov4 --video ./data/video/road_traffic.mp4 --output ./detections/results-original.avi
+- Recorded original speed:
+--- 278.4970302581787 seconds ---
+#### Reduce number of classes
 - New file data/classes/custom.names was created to list reduced number of classes.
 Since this was traffic video listed only person and vehicles classes.
 - Changed core/config.py to use the custom.names file.
 - Then re-ran detection:
 python detect_video.py --weights ./checkpoints/yolov4-416 --size 416 --model yolov4 --video ./data/video/road_traffic.mp4 --output ./detections/results.avi
+- Recorded new speed:
+
 - The new detection results are in video/results.avi. Original results are in video/original-results.avi.
 
 ### Instructions
