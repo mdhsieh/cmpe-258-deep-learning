@@ -14,7 +14,9 @@ Since this was traffic video listed only person and vehicles classes.
 - Then re-ran detection:
 python detect_video.py --weights ./checkpoints/yolov4-416 --size 416 --model yolov4 --video ./data/video/road_traffic.mp4 --output ./detections/results.avi
 - Recorded new speed:
-
+--- 277.21981978416443 seconds ---
+#### Results
+- Saved 1 second of total detection time
 - The new detection results are in video/results.avi. Original results are in video/original-results.avi.
 
 ### Instructions
