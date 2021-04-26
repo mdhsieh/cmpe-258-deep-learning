@@ -24,6 +24,7 @@ data/video/road_traffic.mp4
 data/classes/custom.names
 core/config.py
 detect_video.py
+detections/results-original.avi
 detections/results.avi
 
 ### Instructions
