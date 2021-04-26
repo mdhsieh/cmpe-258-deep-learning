@@ -19,6 +19,13 @@ python detect_video.py --weights ./checkpoints/yolov4-416 --size 416 --model yol
 - Saved 1 second of total detection time
 - The new detection results are in video/results.avi. Original results are in video/original-results.avi.
 
+### Changed files
+data/video/road_traffic.mp4
+data/classes/custom.names
+core/config.py
+detect_video.py
+detections/results.avi
+
 ### Instructions
 ##### Setup:
 First create and activate Anaconda environment. Example using CPU.
