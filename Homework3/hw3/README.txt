@@ -1,3 +1,11 @@
+### Changed files
+data/video/road_traffic.mp4
+data/classes/custom.names
+core/config.py
+detect_video.py
+detections/results-original.avi
+detections/results.avi
+
 ### Changes
 Improve detection speed made to original YOLOv4 repo by reducing number of classes.
 #### Set up YOLOv4 and measured original detection speed
@@ -19,25 +27,10 @@ python detect_video.py --weights ./checkpoints/yolov4-416 --size 416 --model yol
 - Saved 1 second of total detection time
 - The new detection results are in video/results.avi. Original results are in video/original-results.avi.
 
-### Changed files
-data/video/road_traffic.mp4
-data/classes/custom.names
-core/config.py
-detect_video.py
-detections/results-original.avi
-detections/results.avi
-
 ### Instructions
-##### Setup:
-First create and activate Anaconda environment. Example using CPU.
-conda env create -f conda-cpu.yml
-conda activate yolov4-cpu
-
-Download yolov4.weights at:
-https://drive.google.com/u/1/uc?id=1cewMfusmPjYWbrnuJRuKhPMwRe_b9PaT&export=download
-
-Then convert model weights from Darknet to TensorFlow.
-python save_model.py --weights ./data/yolov4.weights --output ./checkpoints/yolov4-416 --input_size 416 --model yolov4 
+The folder should already contain yolov4.weights and
+a checkpoints folder which which was created after training.
+These were created by following README setup instructions.
 
 ##### Run:
 conda activate yolov4-cpu
@@ -49,7 +42,7 @@ Python 3.7.0
 OpenCV-Python 4.1.1.26
 TensorFlow 2.3.0
 
-### More info:
+### More info
 Need to have all these packages in environment to run, view with:
 conda list
 
@@ -139,3 +132,15 @@ xz                        5.2.5                h62dcd97_0
 zipp                      3.4.1                    pypi_0    pypi
 zlib                      1.2.11               h62dcd97_4
 zstd                      1.4.9                h19a0ad4_0
+
+##### Setup
+First create and activate Anaconda environment. Example using CPU.
+conda env create -f conda-cpu.yml
+conda activate yolov4-cpu
+
+Download yolov4.weights at:
+https://drive.google.com/u/1/uc?id=1cewMfusmPjYWbrnuJRuKhPMwRe_b9PaT&export=download
+
+Then convert model weights from Darknet to TensorFlow.
+python save_model.py --weights ./data/yolov4.weights --output ./checkpoints/yolov4-416 --input_size 416 --model yolov4 
+
