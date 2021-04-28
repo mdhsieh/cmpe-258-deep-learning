@@ -8,33 +8,24 @@ detections/results-video.avi
 detections/results-original.avi
 detections/results.avi
 
-### Changes
-Improve detection speed made to original YOLOv4 repo by reducing number of classes.
-#### Set up YOLOv4 and measured original detection speed
-- Test video was data/video/video.mp4
-- Custom video was data/video/road_traffic.mp4
-- Program info is in detect_video.py
-- Ran video detection script: 
-python detect_video.py --weights ./checkpoints/yolov4-416 --size 416 --model yolov4 --video ./data/video/road_traffic.mp4 --output ./detections/results-original.avi
-- Recorded original speed:
---- 278.4970302581787 seconds ---
-#### Reduce number of classes
-- New file data/classes/custom.names was created to list reduced number of classes.
-Since this was traffic video listed only person and vehicles classes.
-- Changed core/config.py to use the custom.names file.
-- Then re-ran detection:
-python detect_video.py --weights ./checkpoints/yolov4-416 --size 416 --model yolov4 --video ./data/video/road_traffic.mp4 --output ./detections/results.avi
-- Recorded new speed:
---- 277.21981978416443 seconds ---
-#### Results
-- Saved 1 second of total detection time
-- The new detection results are in detections/results-video.avi and detections/results.avi
-- Original results are in detections/results-video-original.avi and detection/results-original.avi
-
 ### Instructions
-The folder should already contain yolov4.weights and
-a checkpoints folder which which was created after training.
-These were created by following README setup instructions.
+Download original repo if not done already:
+https://github.com/theAIGuysCode/tensorflow-yolov4-tflite
+
+Replace files with changed files listed in above section.
+
+If Anaconda environment and weights already set up, go to Run section.
+
+##### Setup
+First create and activate Anaconda environment. Example using CPU.
+conda env create -f conda-cpu.yml
+conda activate yolov4-cpu
+
+Download yolov4.weights at:
+https://drive.google.com/u/1/uc?id=1cewMfusmPjYWbrnuJRuKhPMwRe_b9PaT&export=download
+
+Then convert model weights from Darknet to TensorFlow.
+python save_model.py --weights ./data/yolov4.weights --output ./checkpoints/yolov4-416 --input_size 416 --model yolov4 
 
 ##### Run:
 conda activate yolov4-cpu
@@ -137,14 +128,25 @@ zipp                      3.4.1                    pypi_0    pypi
 zlib                      1.2.11               h62dcd97_4
 zstd                      1.4.9                h19a0ad4_0
 
-##### Setup
-First create and activate Anaconda environment. Example using CPU.
-conda env create -f conda-cpu.yml
-conda activate yolov4-cpu
-
-Download yolov4.weights at:
-https://drive.google.com/u/1/uc?id=1cewMfusmPjYWbrnuJRuKhPMwRe_b9PaT&export=download
-
-Then convert model weights from Darknet to TensorFlow.
-python save_model.py --weights ./data/yolov4.weights --output ./checkpoints/yolov4-416 --input_size 416 --model yolov4 
-
+### Changes
+Improve detection speed made to original YOLOv4 repo by reducing number of classes.
+#### Set up YOLOv4 and measured original detection speed
+- Test video was data/video/video.mp4
+- Custom video was data/video/road_traffic.mp4
+- Program info is in detect_video.py
+- Ran video detection script: 
+python detect_video.py --weights ./checkpoints/yolov4-416 --size 416 --model yolov4 --video ./data/video/road_traffic.mp4 --output ./detections/results-original.avi
+- Recorded original speed:
+--- 278.4970302581787 seconds ---
+#### Reduce number of classes
+- New file data/classes/custom.names was created to list reduced number of classes.
+Since this was traffic video listed only person and vehicles classes.
+- Changed core/config.py to use the custom.names file.
+- Then re-ran detection:
+python detect_video.py --weights ./checkpoints/yolov4-416 --size 416 --model yolov4 --video ./data/video/road_traffic.mp4 --output ./detections/results.avi
+- Recorded new speed:
+--- 277.21981978416443 seconds ---
+#### Results
+- Saved 1 second of total detection time
+- The new detection results are in detections/results-video.avi and detections/results.avi
+- Original results are in detections/results-video-original.avi and detection/results-original.avi
