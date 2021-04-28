@@ -3,15 +3,18 @@ data/video/road_traffic.mp4
 data/classes/custom.names
 core/config.py
 detect_video.py
+detections/results-video-original.avi
+detections/results-video.avi
 detections/results-original.avi
 detections/results.avi
 
 ### Changes
 Improve detection speed made to original YOLOv4 repo by reducing number of classes.
 #### Set up YOLOv4 and measured original detection speed
-- Custom video being detected was data/video/road_traffic.mp4
+- Test video was data/video/video.mp4
+- Custom video was data/video/road_traffic.mp4
 - Program info is in detect_video.py
-- In detect_video.py, ran video detection script: 
+- Ran video detection script: 
 python detect_video.py --weights ./checkpoints/yolov4-416 --size 416 --model yolov4 --video ./data/video/road_traffic.mp4 --output ./detections/results-original.avi
 - Recorded original speed:
 --- 278.4970302581787 seconds ---
@@ -25,7 +28,8 @@ python detect_video.py --weights ./checkpoints/yolov4-416 --size 416 --model yol
 --- 277.21981978416443 seconds ---
 #### Results
 - Saved 1 second of total detection time
-- The new detection results are in video/results.avi. Original results are in video/original-results.avi.
+- The new detection results are in detections/results-video.avi and detections/results.avi
+- Original results are in detections/results-video-original.avi and detection/results-original.avi
 
 ### Instructions
 The folder should already contain yolov4.weights and
