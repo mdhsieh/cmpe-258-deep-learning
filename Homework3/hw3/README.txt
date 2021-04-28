@@ -14,7 +14,7 @@ https://github.com/theAIGuysCode/tensorflow-yolov4-tflite
 
 Replace files with changed files listed in above section.
 
-If Anaconda environment and weights already set up, go to Run section.
+If Anaconda environment and weights already set up, skip Setup and go to Run section.
 
 ##### Setup
 First create and activate Anaconda environment. Example using CPU.
@@ -134,19 +134,28 @@ Improve detection speed made to original YOLOv4 repo by reducing number of class
 - Test video was data/video/video.mp4
 - Custom video was data/video/road_traffic.mp4
 - Program info is in detect_video.py
-- Ran video detection script: 
+- Ran video detection script on test video, then custom video: 
+python detect_video.py --weights ./checkpoints/yolov4-416 --size 416 --model yolov4 --video ./data/video/video.mp4 --output ./detections/results-video-original.avi
 python detect_video.py --weights ./checkpoints/yolov4-416 --size 416 --model yolov4 --video ./data/video/road_traffic.mp4 --output ./detections/results-original.avi
-- Recorded original speed:
---- 278.4970302581787 seconds ---
+- Recorded original speeds
+test video:
+    --- 285.5808799266815 seconds ---
+custom video:
+    --- 278.4970302581787 seconds ---
 #### Reduce number of classes
 - New file data/classes/custom.names was created to list reduced number of classes.
 Since this was traffic video listed only person and vehicles classes.
 - Changed core/config.py to use the custom.names file.
 - Then re-ran detection:
+python detect_video.py --weights ./checkpoints/yolov4-416 --size 416 --model yolov4 --video ./data/video/video.mp4 --output ./detections/results-video.avi
 python detect_video.py --weights ./checkpoints/yolov4-416 --size 416 --model yolov4 --video ./data/video/road_traffic.mp4 --output ./detections/results.avi
-- Recorded new speed:
---- 277.21981978416443 seconds ---
+- Recorded new speeds
+test video:
+    --- 249.052020072937 seconds ---
+custom video:
+    --- 277.21981978416443 seconds ---
 #### Results
-- Saved 1 second of total detection time
+- Saved 29 seconds of total detection time on test video
+- Saved 1 second of total detection time on custom video
 - The new detection results are in detections/results-video.avi and detections/results.avi
 - Original results are in detections/results-video-original.avi and detection/results-original.avi
